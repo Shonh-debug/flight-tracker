@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 
-type Flight = {
+export type Flight = {
   id: string;
   flightNumber: string;
   startTime: string;
   endTime: string;
+  startDate: string;
+  endDate: string;
   startTimeZone: string;
   endTimeZone: string;
   startLocation: string;
@@ -45,7 +47,7 @@ export default function FlightSearch() {
           <input
             type="text"
             className="flight-input"
-            placeholder="Enter flight number (e.g. AA123)"
+            placeholder="Enter flight number (e.g. AA123 or ACA228)"
             value={flightNumber}
             onChange={(e) => setFlightNumber(e.target.value)}
           />
@@ -59,7 +61,7 @@ export default function FlightSearch() {
         {loading && <div className="empty-state">Looking up flight details...</div>}
         
         {!loading && searched && flights.length === 0 && (
-          <div className="empty-state">No flights found matching "{flightNumber}". Try AA123, DL456, or UA789.</div>
+          <div className="empty-state">No flights found matching "{flightNumber}". Try AA123 or ACA228.</div>
         )}
 
         {!loading && flights.map((flight) => (
@@ -75,7 +77,7 @@ export default function FlightSearch() {
               <div className="location-group">
                 <div className="time">{flight.startTime}</div>
                 <div className="location">{flight.startLocation}</div>
-                <div className="timezone">{flight.startTimeZone}</div>
+                <div className="timezone">{flight.startDate}</div>
               </div>
 
               <div className="flight-path">
@@ -90,7 +92,7 @@ export default function FlightSearch() {
               <div className="location-group end">
                 <div className="time">{flight.endTime}</div>
                 <div className="location">{flight.endLocation}</div>
-                <div className="timezone">{flight.endTimeZone}</div>
+                <div className="timezone">{flight.endDate}</div>
               </div>
             </div>
           </div>

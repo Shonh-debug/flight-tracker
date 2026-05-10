@@ -5,6 +5,8 @@ export type Flight = {
   flightNumber: string;
   startTime: string;
   endTime: string;
+  startDate: string;
+  endDate: string;
   startTimeZone: string;
   endTimeZone: string;
   startLocation: string;
@@ -12,13 +14,48 @@ export type Flight = {
   status: string;
 };
 
-// Helper to format date strings beautifully
-function formatTime(dateString: string | null) {
+// Helper to format time strings beautifully respecting timezone
+function formatTime(dateString: string | null, timeZone: string | null) {
   if (!dateString) return "N/A";
   try {
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return "N/A";
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    const options: Intl.DateTimeFormatOptions = { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false, // 24-hour format like 19:30
+      timeZoneName: 'short'
+    };
+    
+    if (timeZone) {
+      options.timeZone = timeZone;
+    }
+    
+    return new Intl.DateTimeFormat('en-US', options).format(d);
+  } catch (e) {
+    return "N/A";
+  }
+}
+
+// Helper to format date strings beautifully respecting timezone
+function formatDate(dateString: string | null, timeZone: string | null) {
+  if (!dateString) return "N/A";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "N/A";
+    
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    };
+    
+    if (timeZone) {
+      options.timeZone = timeZone;
+    }
+    
+    return new Intl.DateTimeFormat('en-US', options).format(d);
   } catch (e) {
     return "N/A";
   }
@@ -46,8 +83,13 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Determine if the input is an ICAO code (3 letters followed by numbers) or IATA code.
+    const cleanNumber = flightNumber.replace(/\s+/g, '');
+    const isIcao = /^[A-Za-z]{3}\d+$/.test(cleanNumber);
+    const queryParam = isIcao ? 'flight_icao' : 'flight_iata';
+
     // We use http since free tier of Aviation Stack uses HTTP.
-    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flightNumber}`;
+    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${cleanNumber}`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -68,8 +110,10 @@ export async function GET(request: Request) {
     const results: Flight[] = data.data.map((f: any) => ({
       id: `${f.flight.iata}-${f.flight_date}-${Math.random().toString(36).substring(7)}`,
       flightNumber: f.flight.iata || flightNumber,
-      startTime: formatTime(f.departure.scheduled),
-      endTime: formatTime(f.arrival.scheduled),
+      startTime: formatTime(f.departure.scheduled, f.departure.timezone),
+      endTime: formatTime(f.arrival.scheduled, f.arrival.timezone),
+      startDate: formatDate(f.departure.scheduled, f.departure.timezone),
+      endDate: formatDate(f.arrival.scheduled, f.arrival.timezone),
       startTimeZone: f.departure.timezone || "N/A",
       endTimeZone: f.arrival.timezone || "N/A",
       startLocation: f.departure.airport || f.departure.iata || "Unknown",
