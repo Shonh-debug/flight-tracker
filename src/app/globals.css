@@ -46,6 +46,13 @@
   .badge-cancelled {
     @apply bg-red-50 text-red-700 border border-red-200;
   }
+  .badge-incident {
+    @apply bg-orange-50 text-orange-700 border border-orange-200;
+  }
+  .badge-diverted {
+    @apply bg-purple-50 text-purple-700 border border-purple-200;
+  }
+
 
   /* Animated loading skeleton */
   .skeleton {

@@ -14,10 +14,15 @@ type StatConfig = {
 function getStats(flights: Flight[]): StatConfig[] {
   const total = flights.length;
   const active = flights.filter((f) => f.status === 'Active').length;
-  const scheduled = flights.filter((f) => f.status === 'Scheduled').length;
   const landed = flights.filter((f) => f.status === 'Landed').length;
+  // Delayed = active/scheduled flights that have a real delay in minutes
   const delayed = flights.filter(
-    (f) => f.status === 'Delayed' || f.status === 'Cancelled' || f.status === 'Diverted'
+    (f) =>
+      (f.status === 'Active' || f.status === 'Scheduled') &&
+      ((f.departureDelay ?? 0) > 0 || (f.arrivalDelay ?? 0) > 0)
+  ).length;
+  const cancelled = flights.filter(
+    (f) => f.status === 'Cancelled' || f.status === 'Diverted' || f.status === 'Incident'
   ).length;
 
   return [
@@ -34,7 +39,7 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Active',
+      label: 'Active / In Air',
       value: active,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -58,14 +63,26 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Delayed / Cancelled',
+      label: 'Delayed',
       value: delayed,
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
+      borderColor: delayed > 0 ? 'border-amber-400' : 'border-amber-200',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Cancelled / Diverted',
+      value: cancelled,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      borderColor: cancelled > 0 ? 'border-red-400' : 'border-red-200',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
         </svg>
       ),
     },
@@ -76,7 +93,7 @@ export default function StatsCards({ flights }: { flights: Flight[] }) {
   const stats = getStats(flights);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map((stat, i) => (
         <div
           key={stat.label}

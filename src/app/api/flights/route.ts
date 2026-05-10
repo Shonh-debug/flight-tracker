@@ -5,6 +5,8 @@ export type Flight = {
   flightNumber: string;
   startTime: string;
   endTime: string;
+  startEstimatedTime: string | null;
+  endEstimatedTime: string | null;
   startDate: string;
   endDate: string;
   startTimeZone: string;
@@ -12,14 +14,11 @@ export type Flight = {
   startLocation: string;
   endLocation: string;
   status: string;
+  departureDelay: number | null;
+  arrivalDelay: number | null;
   rawDeparture: string;
   rawArrival: string;
 };
-
-// Aviation Stack returns local airport times but incorrectly labels them
-// with +00:00. Using new Date() would misinterpret these as UTC and shift
-// them by the airport's timezone offset. Instead, we extract the time/date
-// components directly from the ISO string to get the correct local time.
 
 // Helper to get timezone abbreviation (e.g., "PDT", "MDT") from an IANA timezone
 function getTimezoneAbbr(timeZone: string | null): string {
@@ -38,15 +37,15 @@ function getTimezoneAbbr(timeZone: string | null): string {
 }
 
 // Extract HH:MM directly from an ISO timestamp string
-function formatTime(dateString: string | null, timeZone: string | null) {
-  if (!dateString) return "N/A";
+function formatTime(dateString: string | null, timeZone: string | null): string | null {
+  if (!dateString) return null;
   try {
     const match = dateString.match(/T(\d{2}):(\d{2})/);
-    if (!match) return "N/A";
+    if (!match) return null;
     const tzAbbr = getTimezoneAbbr(timeZone);
     return `${match[1]}:${match[2]}${tzAbbr}`;
   } catch {
-    return "N/A";
+    return null;
   }
 }
 
@@ -56,7 +55,6 @@ function formatDate(dateString: string | null, _timeZone: string | null) {
   try {
     const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (!match) return "N/A";
-    // Use noon to avoid any day-boundary edge cases from local timezone interpretation
     const d = new Date(
       parseInt(match[1]),
       parseInt(match[2]) - 1,
@@ -99,15 +97,12 @@ export async function GET(request: Request) {
     const isIcao = /^[A-Za-z]{3}\d+$/.test(cleanNumber);
     const queryParam = isIcao ? 'flight_icao' : 'flight_iata';
 
-    // We use http since free tier of Aviation Stack uses HTTP.
     const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${cleanNumber}`;
     const res = await fetch(url, {
       cache: 'no-store',
-      headers: {
-        'Accept': 'application/json'
-      }
+      headers: { 'Accept': 'application/json' }
     });
-    
+
     if (!res.ok) {
       throw new Error(`Aviation Stack API error: ${res.status}`);
     }
@@ -115,29 +110,47 @@ export async function GET(request: Request) {
     const data = await res.json();
 
     if (!data || !data.data || !Array.isArray(data.data)) {
-       return NextResponse.json({ flights: [] });
+      return NextResponse.json({ flights: [] });
     }
 
-    const results: Flight[] = data.data.map((f: any) => ({
-      id: `${f.flight.iata}-${f.flight_date}-${Math.random().toString(36).substring(7)}`,
-      flightNumber: f.flight.iata || flightNumber,
-      startTime: formatTime(f.departure.scheduled, f.departure.timezone),
-      endTime: formatTime(f.arrival.scheduled, f.arrival.timezone),
-      startDate: formatDate(f.departure.scheduled, f.departure.timezone),
-      endDate: formatDate(f.arrival.scheduled, f.arrival.timezone),
-      startTimeZone: f.departure.timezone || "N/A",
-      endTimeZone: f.arrival.timezone || "N/A",
-      startLocation: f.departure.airport || f.departure.iata || "Unknown",
-      endLocation: f.arrival.airport || f.arrival.iata || "Unknown",
-      status: f.flight_status === 'active' ? 'Active' : 
-              f.flight_status === 'scheduled' ? 'Scheduled' : 
-              f.flight_status === 'landed' ? 'Landed' : 
-              f.flight_status === 'cancelled' ? 'Cancelled' : 
-              f.flight_status === 'incident' ? 'Incident' : 
-              f.flight_status === 'diverted' ? 'Diverted' : 'Unknown',
-      rawDeparture: f.departure.scheduled || "",
-      rawArrival: f.arrival.scheduled || ""
-    }));
+    const results: Flight[] = data.data.map((f: any) => {
+      const depDelay: number | null = typeof f.departure.delay === 'number' ? f.departure.delay : null;
+      const arrDelay: number | null = typeof f.arrival.delay === 'number' ? f.arrival.delay : null;
+
+      // Only show estimated time if it meaningfully differs from scheduled (>1 min)
+      const scheduledDep = formatTime(f.departure.scheduled, f.departure.timezone);
+      const estimatedDep = formatTime(f.departure.estimated, f.departure.timezone);
+      const scheduledArr = formatTime(f.arrival.scheduled, f.arrival.timezone);
+      const estimatedArr = formatTime(f.arrival.estimated, f.arrival.timezone);
+
+      const startEstimatedTime = estimatedDep !== scheduledDep ? estimatedDep : null;
+      const endEstimatedTime = estimatedArr !== scheduledArr ? estimatedArr : null;
+
+      return {
+        id: `${f.flight.iata}-${f.flight_date}-${Math.random().toString(36).substring(7)}`,
+        flightNumber: f.flight.iata || flightNumber,
+        startTime: scheduledDep ?? "N/A",
+        endTime: scheduledArr ?? "N/A",
+        startEstimatedTime,
+        endEstimatedTime,
+        startDate: formatDate(f.departure.scheduled, f.departure.timezone),
+        endDate: formatDate(f.arrival.scheduled, f.arrival.timezone),
+        startTimeZone: f.departure.timezone || "N/A",
+        endTimeZone: f.arrival.timezone || "N/A",
+        startLocation: f.departure.airport || f.departure.iata || "Unknown",
+        endLocation: f.arrival.airport || f.arrival.iata || "Unknown",
+        departureDelay: depDelay,
+        arrivalDelay: arrDelay,
+        status: f.flight_status === 'active' ? 'Active' :
+                f.flight_status === 'scheduled' ? 'Scheduled' :
+                f.flight_status === 'landed' ? 'Landed' :
+                f.flight_status === 'cancelled' ? 'Cancelled' :
+                f.flight_status === 'incident' ? 'Incident' :
+                f.flight_status === 'diverted' ? 'Diverted' : 'Unknown',
+        rawDeparture: f.departure.scheduled || "",
+        rawArrival: f.arrival.scheduled || "",
+      };
+    });
 
     return NextResponse.json({ flights: results });
   } catch (error: any) {
