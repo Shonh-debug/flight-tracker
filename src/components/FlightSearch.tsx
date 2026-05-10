@@ -23,6 +23,7 @@ export default function FlightSearch() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +31,21 @@ export default function FlightSearch() {
 
     setLoading(true);
     setSearched(true);
+    setError(null);
     try {
       const res = await fetch(`/api/flights?flightNumber=${encodeURIComponent(flightNumber)}`);
       const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.error || `Server error: ${res.status}`);
+        setFlights([]);
+        return;
+      }
+      
       setFlights(data.flights || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || "Failed to fetch flights");
       setFlights([]);
     } finally {
       setLoading(false);
@@ -62,7 +72,9 @@ export default function FlightSearch() {
       <div className="results-container">
         {loading && <div className="empty-state">Looking up flight details...</div>}
         
-        {!loading && searched && flights.length === 0 && (
+        {error && <div className="empty-state" style={{ color: '#ef4444' }}>{error}</div>}
+
+        {!loading && !error && searched && flights.length === 0 && (
           <div className="empty-state">No flights found matching "{flightNumber}". Try AA123 or ACA228.</div>
         )}
 
