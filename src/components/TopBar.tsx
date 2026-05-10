@@ -47,14 +47,14 @@ export default function TopBar({
 
       {/* Page title */}
       <div className="hidden md:block">
-        <h2 className="text-lg font-semibold text-dash-text">Live Flight Command</h2>
+        <h2 className="text-lg font-semibold text-dash-text">Live Flight Tracker</h2>
       </div>
 
       {/* Date and time */}
       <div className="hidden md:flex items-center gap-2 text-sm text-dash-muted ml-2">
         <span className="font-mono">{dateStr}</span>
         <span className="text-slate-300">|</span>
-        <span className="font-mono">{timeStr} UTC</span>
+        <span className="font-mono">{timeStr} UTC + 7</span>
       </div>
 
       {/* Search bar */}
@@ -74,7 +74,7 @@ export default function TopBar({
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Flight ID / Airport"
+            placeholder="Flight ID "
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-dash-border rounded-lg text-sm text-dash-text placeholder:text-dash-muted focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all"
           />
           {loading && (
