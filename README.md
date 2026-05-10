@@ -13,7 +13,7 @@ Flight Tracker is a full-stack web application that integrates the **Aviation St
 ### Key Features
 
 - 🔍 **Flight Search** — Enter any IATA (e.g. `AA123`) or ICAO (e.g. `ACA228`) flight number
-- 📊 **Live Dashboard** — Summary stats cards (Total / Active / Landed / Delayed / Cancelled)
+- 📊 **Live Dashboard** — Summary stats cards (Total / Active / Landed / Delayed / Cancelled / Scheduled)
 - 🕐 **Timezone-Accurate Times** — Scheduled times displayed in the local timezone of each airport
 - ⚠️ **Delay Badges** — Real-time delay in minutes shown alongside scheduled times, with strikethrough and estimated time
 - 🎨 **Color-Coded Statuses** — Active (blue), Scheduled (slate), Landed (green), Cancelled (red), Diverted (purple), Incident (orange)
