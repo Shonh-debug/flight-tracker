@@ -12,6 +12,8 @@ export type Flight = {
   startLocation: string;
   endLocation: string;
   status: string;
+  rawDeparture: string;
+  rawArrival: string;
 };
 
 // Helper to format time strings beautifully respecting timezone
@@ -123,7 +125,9 @@ export async function GET(request: Request) {
               f.flight_status === 'landed' ? 'Landed' : 
               f.flight_status === 'cancelled' ? 'Cancelled' : 
               f.flight_status === 'incident' ? 'Incident' : 
-              f.flight_status === 'diverted' ? 'Diverted' : 'Unknown'
+              f.flight_status === 'diverted' ? 'Diverted' : 'Unknown',
+      rawDeparture: f.departure.scheduled || "",
+      rawArrival: f.arrival.scheduled || ""
     }));
 
     return NextResponse.json({ flights: results });

@@ -14,6 +14,8 @@ export type Flight = {
   startLocation: string;
   endLocation: string;
   status: string;
+  rawDeparture: string;
+  rawArrival: string;
 };
 
 export default function FlightSearch() {
@@ -64,8 +66,23 @@ export default function FlightSearch() {
           <div className="empty-state">No flights found matching "{flightNumber}". Try AA123 or ACA228.</div>
         )}
 
-        {!loading && flights.map((flight) => (
-          <div key={flight.id} className="flight-card">
+        {!loading && flights.map((flight) => {
+          const createCalendarUrl = (flight: Flight) => {
+            if (!flight.rawDeparture || !flight.rawArrival) return '#';
+            try {
+              const start = new Date(flight.rawDeparture).toISOString().replace(/-|:|\.\d\d\d/g, "");
+              const end = new Date(flight.rawArrival).toISOString().replace(/-|:|\.\d\d\d/g, "");
+              const title = encodeURIComponent(`Flight ${flight.flightNumber}`);
+              const details = encodeURIComponent(`Flight ${flight.flightNumber} from ${flight.startLocation} to ${flight.endLocation}`);
+              const location = encodeURIComponent(flight.startLocation);
+              return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+            } catch (e) {
+              return '#';
+            }
+          };
+
+          return (
+          <a key={flight.id} href={createCalendarUrl(flight)} target="_blank" rel="noopener noreferrer" className="flight-card" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <div className="flight-header">
               <div className="flight-number">{flight.flightNumber}</div>
               <div className={`flight-status ${flight.status !== 'On Time' ? 'delayed' : ''}`} style={flight.status !== 'On Time' ? { color: '#fbbf24', background: 'rgba(245, 158, 11, 0.1)' } : {}}>
@@ -95,8 +112,9 @@ export default function FlightSearch() {
                 <div className="timezone">{flight.endDate}</div>
               </div>
             </div>
-          </div>
-        ))}
+          </a>
+          );
+        })}
       </div>
     </>
   );
