@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import type { Flight } from './FlightSearch';
 
 function getStatusBadge(status: string) {
@@ -87,7 +88,14 @@ function TimeCell({
 }
 
 export default function FlightTable({ flights }: { flights: Flight[] }) {
+  const router = useRouter();
   if (flights.length === 0) return null;
+
+  const navigateToDetail = (flight: Flight) => {
+    // Store flight data in sessionStorage so the detail page can read it
+    sessionStorage.setItem('selectedFlight', JSON.stringify(flight));
+    router.push(`/flights/${encodeURIComponent(flight.id)}`);
+  };
 
   return (
     <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-fade-in">
@@ -128,7 +136,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                   key={flight.id}
                   className="hover:bg-sky-50/50 transition-colors group cursor-pointer animate-slide-up"
                   style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
-                  onClick={() => window.open(createCalendarUrl(flight), '_blank')}
+                  onClick={() => navigateToDetail(flight)}
                 >
                   {/* Flight number + delay badge */}
                   <td className="py-3.5 px-5">
@@ -209,13 +217,11 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
           const depDelay = flight.departureDelay;
 
           return (
-            <a
+            <div
               key={flight.id}
-              href={createCalendarUrl(flight)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-4 hover:bg-sky-50/50 transition-colors animate-slide-up"
-              style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both', textDecoration: 'none', color: 'inherit' }}
+              className="block px-4 py-4 hover:bg-sky-50/50 transition-colors animate-slide-up cursor-pointer"
+              style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
+              onClick={() => navigateToDetail(flight)}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -258,7 +264,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           );
         })}
       </div>

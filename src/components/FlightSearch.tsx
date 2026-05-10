@@ -5,6 +5,7 @@ import { useState } from 'react';
 export type Flight = {
   id: string;
   flightNumber: string;
+  airlineName: string;
   startTime: string;
   endTime: string;
   startEstimatedTime: string | null;
@@ -15,9 +16,16 @@ export type Flight = {
   endTimeZone: string;
   startLocation: string;
   endLocation: string;
+  startIata: string;
+  endIata: string;
+  startTerminal: string | null;
+  endTerminal: string | null;
+  startGate: string | null;
+  endGate: string | null;
   status: string;
   departureDelay: number | null;
   arrivalDelay: number | null;
+  flightDate: string;
   rawDeparture: string;
   rawArrival: string;
 };

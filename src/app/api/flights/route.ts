@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export type Flight = {
   id: string;
   flightNumber: string;
+  airlineName: string;
   startTime: string;
   endTime: string;
   startEstimatedTime: string | null;
@@ -13,9 +14,16 @@ export type Flight = {
   endTimeZone: string;
   startLocation: string;
   endLocation: string;
+  startIata: string;
+  endIata: string;
+  startTerminal: string | null;
+  endTerminal: string | null;
+  startGate: string | null;
+  endGate: string | null;
   status: string;
   departureDelay: number | null;
   arrivalDelay: number | null;
+  flightDate: string;
   rawDeparture: string;
   rawArrival: string;
 };
@@ -113,11 +121,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ flights: [] });
     }
 
-    const results: Flight[] = data.data.map((f: any) => {
+    const results: Flight[] = data.data.map((f: any, idx: number) => {
       const depDelay: number | null = typeof f.departure.delay === 'number' ? f.departure.delay : null;
       const arrDelay: number | null = typeof f.arrival.delay === 'number' ? f.arrival.delay : null;
 
-      // Only show estimated time if it meaningfully differs from scheduled (>1 min)
+      // Only show estimated time if it meaningfully differs from scheduled
       const scheduledDep = formatTime(f.departure.scheduled, f.departure.timezone);
       const estimatedDep = formatTime(f.departure.estimated, f.departure.timezone);
       const scheduledArr = formatTime(f.arrival.scheduled, f.arrival.timezone);
@@ -126,9 +134,13 @@ export async function GET(request: Request) {
       const startEstimatedTime = estimatedDep !== scheduledDep ? estimatedDep : null;
       const endEstimatedTime = estimatedArr !== scheduledArr ? estimatedArr : null;
 
+      // Use a deterministic ID so we can look flights up by index later
+      const flightIata = f.flight.iata || cleanNumber;
+
       return {
-        id: `${f.flight.iata}-${f.flight_date}-${Math.random().toString(36).substring(7)}`,
-        flightNumber: f.flight.iata || flightNumber,
+        id: `${flightIata}-${f.flight_date}-${idx}`,
+        flightNumber: flightIata,
+        airlineName: f.airline?.name || "Unknown Airline",
         startTime: scheduledDep ?? "N/A",
         endTime: scheduledArr ?? "N/A",
         startEstimatedTime,
@@ -137,10 +149,17 @@ export async function GET(request: Request) {
         endDate: formatDate(f.arrival.scheduled, f.arrival.timezone),
         startTimeZone: f.departure.timezone || "N/A",
         endTimeZone: f.arrival.timezone || "N/A",
-        startLocation: f.departure.airport || f.departure.iata || "Unknown",
-        endLocation: f.arrival.airport || f.arrival.iata || "Unknown",
+        startLocation: f.departure.airport || "Unknown",
+        endLocation: f.arrival.airport || "Unknown",
+        startIata: f.departure.iata || "",
+        endIata: f.arrival.iata || "",
+        startTerminal: f.departure.terminal || null,
+        endTerminal: f.departure.terminal || null,
+        startGate: f.departure.gate || null,
+        endGate: f.arrival.gate || null,
         departureDelay: depDelay,
         arrivalDelay: arrDelay,
+        flightDate: f.flight_date || "N/A",
         status: f.flight_status === 'active' ? 'Active' :
                 f.flight_status === 'scheduled' ? 'Scheduled' :
                 f.flight_status === 'landed' ? 'Landed' :
