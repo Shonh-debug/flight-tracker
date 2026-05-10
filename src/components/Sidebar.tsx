@@ -1,0 +1,140 @@
+'use client';
+
+import { useState } from 'react';
+
+type NavItem = {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+const navItems: NavItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    id: 'flights',
+    label: 'Flights',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'alerts',
+    label: 'Alerts',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+    ),
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+];
+
+export default function Sidebar({
+  activeTab,
+  onTabChange,
+  isCollapsed,
+  onToggle,
+}: {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  isCollapsed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      {/* Mobile overlay */}
+      {!isCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed top-0 left-0 h-screen bg-sidebar z-50
+          flex flex-col
+          transition-all duration-300 ease-in-out
+          ${isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'translate-x-0 w-64'}
+        `}
+      >
+        {/* Logo / Brand */}
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10">
+          <div className="w-9 h-9 rounded-lg bg-sky-500 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
+            </svg>
+          </div>
+          {!isCollapsed && (
+            <div className="animate-fade-in">
+              <div className="text-white font-bold text-lg leading-tight">FlightTracker</div>
+              <div className="text-slate-400 text-xs">Command Center</div>
+            </div>
+          )}
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 py-4 px-3 space-y-1">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                id={`nav-${item.id}`}
+                onClick={() => onTabChange(item.id)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                  text-sm font-medium transition-all duration-200
+                  ${isActive
+                    ? 'bg-sky-500/20 text-sky-400'
+                    : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
+                  }
+                  ${isCollapsed ? 'justify-center lg:justify-center' : ''}
+                `}
+                title={isCollapsed ? item.label : undefined}
+              >
+                <span className={isActive ? 'text-sky-400' : ''}>{item.icon}</span>
+                {!isCollapsed && <span className="animate-fade-in">{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Collapse toggle (desktop) */}
+        <div className="hidden lg:block px-3 pb-4">
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-sidebar-hover transition-colors text-sm"
+          >
+            <svg
+              className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            {!isCollapsed && <span className="animate-fade-in">Collapse</span>}
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}

@@ -77,9 +77,8 @@ export async function GET(request: Request) {
   const apiKey = process.env.AVIATION_STACK_API_KEY;
   if (!apiKey) {
     console.error("Missing AVIATION_STACK_API_KEY");
-    // Return empty results or perhaps a 500 status. Returning empty gracefully is better for UI.
     return NextResponse.json(
-      { error: "API key is missing. Please set AVIATION_STACK_API_KEY in .env.local" },
+      { error: "API key is missing. Please set AVIATION_STACK_API_KEY in .env.local (or your Vercel Environment Variables dashboard)" },
       { status: 500 }
     );
   }
