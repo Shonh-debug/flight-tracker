@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flight Tracker Pro",
+  title: "Flight Tracker 101",
   description: "A premium flight tracking experience",
 };
 

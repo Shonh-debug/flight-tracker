@@ -12,66 +12,79 @@ export type Flight = {
   status: string;
 };
 
-const mockFlights: Flight[] = [
-  {
-    id: "1",
-    flightNumber: "AA123",
-    startTime: "08:30 AM",
-    endTime: "11:45 AM",
-    startTimeZone: "EST",
-    endTimeZone: "PST",
-    startLocation: "JFK - New York",
-    endLocation: "LAX - Los Angeles",
-    status: "On Time"
-  },
-  {
-    id: "2",
-    flightNumber: "DL456",
-    startTime: "02:15 PM",
-    endTime: "04:30 PM",
-    startTimeZone: "EST",
-    endTimeZone: "CST",
-    startLocation: "BOS - Boston",
-    endLocation: "ORD - Chicago",
-    status: "Delayed"
-  },
-  {
-    id: "3",
-    flightNumber: "UA789",
-    startTime: "06:00 PM",
-    endTime: "10:30 PM",
-    startTimeZone: "PST",
-    endTimeZone: "HST",
-    startLocation: "SFO - San Francisco",
-    endLocation: "HNL - Honolulu",
-    status: "On Time"
-  },
-  {
-    id: "4",
-    flightNumber: "AA123",
-    startTime: "07:00 PM",
-    endTime: "10:15 PM",
-    startTimeZone: "EST",
-    endTimeZone: "PST",
-    startLocation: "MIA - Miami",
-    endLocation: "SEA - Seattle",
-    status: "On Time"
+// Helper to format date strings beautifully
+function formatTime(dateString: string | null) {
+  if (!dateString) return "N/A";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "N/A";
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return "N/A";
   }
-];
+}
+
+// Force the route to be dynamic so it never caches outdated real-time data
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const flightNumber = searchParams.get('flightNumber');
 
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
-
   if (!flightNumber) {
     return NextResponse.json({ flights: [] });
   }
 
-  const results = mockFlights.filter(f => 
-    f.flightNumber.toLowerCase() === flightNumber.toLowerCase()
-  );
+  const apiKey = process.env.AVIATION_STACK_API_KEY;
+  if (!apiKey) {
+    console.error("Missing AVIATION_STACK_API_KEY");
+    // Return empty results or perhaps a 500 status. Returning empty gracefully is better for UI.
+    return NextResponse.json(
+      { error: "API key is missing. Please set AVIATION_STACK_API_KEY in .env.local" },
+      { status: 500 }
+    );
+  }
 
-  return NextResponse.json({ flights: results });
+  try {
+    // We use http since free tier of Aviation Stack uses HTTP.
+    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&flight_iata=${flightNumber}`;
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Aviation Stack API error: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (!data || !data.data || !Array.isArray(data.data)) {
+       return NextResponse.json({ flights: [] });
+    }
+
+    const results: Flight[] = data.data.map((f: any) => ({
+      id: `${f.flight.iata}-${f.flight_date}-${Math.random().toString(36).substring(7)}`,
+      flightNumber: f.flight.iata || flightNumber,
+      startTime: formatTime(f.departure.scheduled),
+      endTime: formatTime(f.arrival.scheduled),
+      startTimeZone: f.departure.timezone || "N/A",
+      endTimeZone: f.arrival.timezone || "N/A",
+      startLocation: f.departure.airport || f.departure.iata || "Unknown",
+      endLocation: f.arrival.airport || f.arrival.iata || "Unknown",
+      status: f.flight_status === 'active' ? 'Active' : 
+              f.flight_status === 'scheduled' ? 'Scheduled' : 
+              f.flight_status === 'landed' ? 'Landed' : 
+              f.flight_status === 'cancelled' ? 'Cancelled' : 
+              f.flight_status === 'incident' ? 'Incident' : 
+              f.flight_status === 'diverted' ? 'Diverted' : 'Unknown'
+    }));
+
+    return NextResponse.json({ flights: results });
+  } catch (error: any) {
+    console.error("Failed to fetch flight data:", error);
+    return NextResponse.json({ flights: [] }, { status: 500 });
+  }
 }

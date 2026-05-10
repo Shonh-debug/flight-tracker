@@ -29,7 +29,7 @@ export default function FlightSearch() {
     try {
       const res = await fetch(`/api/flights?flightNumber=${encodeURIComponent(flightNumber)}`);
       const data = await res.json();
-      setFlights(data.flights);
+      setFlights(data.flights || []);
     } catch (err) {
       console.error(err);
       setFlights([]);
