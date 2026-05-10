@@ -1,6 +1,6 @@
 # ✈️ Flight Tracker — Real-Time Flight Command Center
 
-A premium, real-time flight tracking web application that lets you look up any commercial flight by its flight number and see live status, departure/arrival info, delay data, and detailed boarding-pass-style flight pages.
+A real-time flight tracking web application that lets you look up any commercial flight by its flight number and see live status, departure/arrival info, delay data, and detailed boarding-pass-style flight pages.
 
 **🌐 Live Site:** [flight-tracker-plum.vercel.app](https://flight-tracker-plum.vercel.app)
 
