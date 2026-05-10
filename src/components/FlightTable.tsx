@@ -41,12 +41,17 @@ function getStatusDot(status: string) {
 function createCalendarUrl(flight: Flight) {
   if (!flight.rawDeparture || !flight.rawArrival) return '#';
   try {
-    const start = new Date(flight.rawDeparture)
-      .toISOString()
-      .replace(/-|:|\.\d\d\d/g, '');
-    const end = new Date(flight.rawArrival)
-      .toISOString()
-      .replace(/-|:|\.\d\d\d/g, '');
+    // Aviation Stack returns local times with false +00:00 offset.
+    // Extract the date/time directly from the string to avoid
+    // new Date() misinterpreting them as UTC.
+    const extractCalendarTime = (raw: string) => {
+      const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      if (!match) return '';
+      return `${match[1]}${match[2]}${match[3]}T${match[4]}${match[5]}00`;
+    };
+    const start = extractCalendarTime(flight.rawDeparture);
+    const end = extractCalendarTime(flight.rawArrival);
+    if (!start || !end) return '#';
     const title = encodeURIComponent(`Flight ${flight.flightNumber}`);
     const details = encodeURIComponent(
       `Flight ${flight.flightNumber} from ${flight.startLocation} to ${flight.endLocation}`

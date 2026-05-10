@@ -16,49 +16,59 @@ export type Flight = {
   rawArrival: string;
 };
 
-// Helper to format time strings beautifully respecting timezone
+// Aviation Stack returns local airport times but incorrectly labels them
+// with +00:00. Using new Date() would misinterpret these as UTC and shift
+// them by the airport's timezone offset. Instead, we extract the time/date
+// components directly from the ISO string to get the correct local time.
+
+// Helper to get timezone abbreviation (e.g., "PDT", "MDT") from an IANA timezone
+function getTimezoneAbbr(timeZone: string | null): string {
+  if (!timeZone) return "";
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'short',
+    });
+    const parts = formatter.formatToParts(new Date());
+    const tzPart = parts.find((p) => p.type === 'timeZoneName');
+    return tzPart ? ` ${tzPart.value}` : "";
+  } catch {
+    return "";
+  }
+}
+
+// Extract HH:MM directly from an ISO timestamp string
 function formatTime(dateString: string | null, timeZone: string | null) {
   if (!dateString) return "N/A";
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return "N/A";
-    
-    const options: Intl.DateTimeFormatOptions = { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false, // 24-hour format like 19:30
-      timeZoneName: 'short'
-    };
-    
-    if (timeZone) {
-      options.timeZone = timeZone;
-    }
-    
-    return new Intl.DateTimeFormat('en-US', options).format(d);
-  } catch (e) {
+    const match = dateString.match(/T(\d{2}):(\d{2})/);
+    if (!match) return "N/A";
+    const tzAbbr = getTimezoneAbbr(timeZone);
+    return `${match[1]}:${match[2]}${tzAbbr}`;
+  } catch {
     return "N/A";
   }
 }
 
-// Helper to format date strings beautifully respecting timezone
-function formatDate(dateString: string | null, timeZone: string | null) {
+// Extract YYYY-MM-DD directly from an ISO timestamp string and format as "Wed, May 10"
+function formatDate(dateString: string | null, _timeZone: string | null) {
   if (!dateString) return "N/A";
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return "N/A";
-    
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    };
-    
-    if (timeZone) {
-      options.timeZone = timeZone;
-    }
-    
-    return new Intl.DateTimeFormat('en-US', options).format(d);
-  } catch (e) {
+    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return "N/A";
+    // Use noon to avoid any day-boundary edge cases from local timezone interpretation
+    const d = new Date(
+      parseInt(match[1]),
+      parseInt(match[2]) - 1,
+      parseInt(match[3]),
+      12, 0, 0
+    );
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }).format(d);
+  } catch {
     return "N/A";
   }
 }
