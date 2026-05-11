@@ -109,9 +109,16 @@ export default function FlightDetailPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
 
-          <button onClick={() => router.push('/')} className="flex items-center gap-2 text-sm text-dash-muted hover:text-sky-600 transition-colors">
+          <button onClick={() => {
+            const lastSearch = sessionStorage.getItem('lastFlightSearch');
+            if (lastSearch) {
+              router.push(`/?q=${encodeURIComponent(lastSearch)}`);
+            } else {
+              router.push('/');
+            }
+          }} className="flex items-center gap-2 text-sm text-dash-muted hover:text-sky-600 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Back to Dashboard
+            Back to Results
           </button>
 
           <div className="flex-1" />

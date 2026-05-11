@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardShell from '@/components/DashboardShell';
 import StatsCards from '@/components/StatsCards';
 import FlightTable from '@/components/FlightTable';
 import type { Flight } from '@/components/FlightSearch';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState('');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async () => {
-    if (!searchValue.trim()) return;
+  const doSearch = useCallback(async (query: string) => {
+    if (!query.trim()) return;
 
+    setSearchValue(query);
     setLoading(true);
     setSearched(true);
     setError(null);
     try {
       const res = await fetch(
-        `/api/flights?flightNumber=${encodeURIComponent(searchValue)}`
+        `/api/flights?flightNumber=${encodeURIComponent(query)}`
       );
       const data = await res.json();
 
@@ -39,6 +42,18 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Auto-search if the URL has a ?q= parameter (e.g., coming back from flight detail)
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) {
+      doSearch(q);
+    }
+  }, [searchParams, doSearch]);
+
+  const handleSearch = async () => {
+    await doSearch(searchValue);
   };
 
   return (
@@ -172,5 +187,17 @@ export default function DashboardPage() {
         </>
       )}
     </DashboardShell>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen bg-dash-bg items-center justify-center">
+        <div className="text-dash-muted text-sm">Loading…</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

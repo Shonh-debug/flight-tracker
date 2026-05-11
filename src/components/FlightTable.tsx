@@ -94,6 +94,9 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
   const navigateToDetail = (flight: Flight) => {
     // Store flight data in sessionStorage so the detail page can read it
     sessionStorage.setItem('selectedFlight', JSON.stringify(flight));
+    // Store the current search query so the detail page can link back to results
+    const currentSearch = new URLSearchParams(window.location.search).get('q') || flight.flightNumber;
+    sessionStorage.setItem('lastFlightSearch', currentSearch);
     router.push(`/flights/${encodeURIComponent(flight.id)}`);
   };
 
