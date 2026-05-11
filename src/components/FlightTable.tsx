@@ -131,14 +131,15 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
           <tbody className="divide-y divide-dash-border">
             {flights.map((flight, i) => {
               const isActive = flight.status === 'Active' || flight.status === 'Scheduled';
+              const isPast = flight.status === 'Landed' || flight.status === 'Cancelled' || flight.status === 'Incident' || flight.status === 'Diverted';
               const depDelay = flight.departureDelay;
               const arrDelay = flight.arrivalDelay;
 
               return (
                 <tr
                   key={flight.id}
-                  className="hover:bg-sky-50/50 transition-colors group cursor-pointer animate-slide-up"
-                  style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
+                  className={`hover:bg-sky-50/50 transition-colors group cursor-pointer animate-slide-up ${isPast ? 'opacity-70' : ''}`}
+                  style={{ animationDelay: `${Math.min(i * 30, 800)}ms`, animationFillMode: 'both' }}
                   onClick={() => navigateToDetail(flight)}
                 >
                   {/* Flight number + delay badge */}
@@ -217,13 +218,14 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
       <div className="md:hidden divide-y divide-dash-border">
         {flights.map((flight, i) => {
           const isActive = flight.status === 'Active' || flight.status === 'Scheduled';
+          const isPast = flight.status === 'Landed' || flight.status === 'Cancelled' || flight.status === 'Incident' || flight.status === 'Diverted';
           const depDelay = flight.departureDelay;
 
           return (
             <div
               key={flight.id}
-              className="block px-4 py-4 hover:bg-sky-50/50 transition-colors animate-slide-up cursor-pointer"
-              style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
+              className={`block px-4 py-4 hover:bg-sky-50/50 transition-colors animate-slide-up cursor-pointer ${isPast ? 'opacity-70' : ''}`}
+              style={{ animationDelay: `${Math.min(i * 30, 800)}ms`, animationFillMode: 'both' }}
               onClick={() => navigateToDetail(flight)}
             >
               <div className="flex items-center justify-between mb-2">

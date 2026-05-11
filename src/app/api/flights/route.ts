@@ -105,7 +105,7 @@ export async function GET(request: Request) {
     const isIcao = /^[A-Za-z]{3}\d+$/.test(cleanNumber);
     const queryParam = isIcao ? 'flight_icao' : 'flight_iata';
 
-    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${cleanNumber}`;
+    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${cleanNumber}&limit=100`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: { 'Accept': 'application/json' }
@@ -171,7 +171,22 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json({ flights: results });
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const filteredAndSortedResults = results
+      .filter((f) => {
+        if (!f.rawDeparture) return false;
+        const depTime = new Date(f.rawDeparture);
+        return depTime >= thirtyDaysAgo;
+      })
+      .sort((a, b) => {
+        const timeA = a.rawDeparture ? new Date(a.rawDeparture).getTime() : 0;
+        const timeB = b.rawDeparture ? new Date(b.rawDeparture).getTime() : 0;
+        return timeB - timeA; // Descending
+      });
+
+    return NextResponse.json({ flights: filteredAndSortedResults });
   } catch (error: any) {
     console.error("Failed to fetch flight data:", error);
     return NextResponse.json({ flights: [] }, { status: 500 });
