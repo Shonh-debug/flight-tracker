@@ -45,10 +45,16 @@ function DashboardContent() {
   }, []);
 
   // Auto-search if the URL has a ?q= parameter (e.g., coming back from flight detail)
+  // Reset to empty command center when navigating home (no q param)
   useEffect(() => {
     const q = searchParams.get('q');
     if (q) {
       doSearch(q);
+    } else {
+      setSearchValue('');
+      setFlights([]);
+      setSearched(false);
+      setError(null);
     }
   }, [searchParams, doSearch]);
 
