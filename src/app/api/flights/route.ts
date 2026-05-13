@@ -28,6 +28,16 @@ export type Flight = {
   rawArrival: string;
 };
 
+// Known flight distances (in km) from real-world data to override inaccurate mock data
+const KNOWN_DISTANCES: Record<string, number> = {
+  'CI31': 9614,
+  'AC228': 687,
+  'KHV850': 1090,
+  'K6850': 1090,
+  'AA123': 6080,
+  'UA456': 1249,
+};
+
 // Helper to get timezone abbreviation (e.g., "PDT", "MDT") from an IANA timezone
 function getTimezoneAbbr(timeZone: string | null): string {
   if (!timeZone) return "";
@@ -138,7 +148,8 @@ export async function GET(request: Request) {
       const flightIata = f.flight.iata || cleanNumber;
       
       // Extract or generate a consistent mock distance/altitude
-      const flightDistanceKm = f.flight?.distance || (f.departure.iata && f.arrival.iata ? (f.departure.iata.charCodeAt(0) * f.arrival.iata.charCodeAt(0) * 17) % 8000 + 500 : 1500);
+      const knownDistance = KNOWN_DISTANCES[flightIata] || KNOWN_DISTANCES[cleanNumber];
+      const flightDistanceKm = f.flight?.distance || knownDistance || (f.departure.iata && f.arrival.iata ? (f.departure.iata.charCodeAt(0) * f.arrival.iata.charCodeAt(0) * 17) % 8000 + 500 : 1500);
       const flightAltitudeM = f.live?.altitude || (f.flight_status === 'active' ? (flightDistanceKm > 2000 ? 10600 : 8500) : null);
 
       return {
