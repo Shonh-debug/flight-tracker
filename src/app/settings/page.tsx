@@ -1,10 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardShell from '@/components/DashboardShell';
+
+const SETTINGS_KEY = 'flight_tracker_settings';
+
+type SettingsState = {
+  distanceUnit: 'km' | 'miles';
+  altitudeUnit: 'meters' | 'feet';
+  timezone: 'local' | 'utc' | 'airport';
+  themeAccent: 'sky' | 'emerald' | 'amber';
+};
+
+const defaultSettings: SettingsState = {
+  distanceUnit: 'miles',
+  altitudeUnit: 'feet',
+  timezone: 'local',
+  themeAccent: 'sky',
+};
 
 export default function SettingsPage() {
   const [searchValue, setSearchValue] = useState('');
+  const [activeTab, setActiveTab] = useState('general');
+  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [isClient, setIsClient] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    if (stored) {
+      try {
+        setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+      } catch (e) {
+        console.error('Failed to parse settings', e);
+      }
+    }
+  }, []);
+
+  const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+    
+    // Show toast
+    setToastMessage('Setting saved');
+    setTimeout(() => setToastMessage(null), 2000);
+  };
+
+  const tabs = [
+    { 
+      id: 'general', 
+      label: 'General', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> 
+    },
+    { 
+      id: 'appearance', 
+      label: 'Appearance', 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> 
+    },
+    { 
+      id: 'notifications', 
+      label: 'Notifications', 
+      disabled: true,
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> 
+    },
+    { 
+      id: 'api', 
+      label: 'API & Data', 
+      disabled: true,
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg> 
+    },
+  ];
 
   return (
     <DashboardShell
@@ -13,88 +80,129 @@ export default function SettingsPage() {
       onSearchSubmit={() => {}}
       loading={false}
     >
-      <div className="animate-fade-in">
+      <div className="animate-fade-in relative">
         <h1 className="text-2xl font-bold text-dash-text mb-1">Settings</h1>
         <p className="text-dash-muted text-sm mb-6">
-          Manage your preferences and account settings.
+          Manage your preferences, display settings, and API configurations.
         </p>
+
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="absolute top-0 right-0 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in">
+            {toastMessage}
+          </div>
+        )}
       </div>
 
-      <div className="space-y-4">
-        {/* Preferences Section */}
-        <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up">
-          <div className="px-5 py-4 border-b border-dash-border">
-            <h3 className="text-base font-semibold text-dash-text">Preferences</h3>
-          </div>
-          <div className="divide-y divide-dash-border">
-            <div className="px-5 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-dash-text">Time Format</div>
-                <div className="text-xs text-dash-muted mt-0.5">Choose between 12-hour and 24-hour format</div>
-              </div>
-              <div className="px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-lg text-xs font-semibold text-sky-700">
-                24h
-              </div>
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-dash-text">Default Airport</div>
-                <div className="text-xs text-dash-muted mt-0.5">Set your home airport for quick access</div>
-              </div>
-              <div className="px-3 py-1.5 bg-slate-50 border border-dash-border rounded-lg text-xs font-medium text-dash-muted">
-                Not set
-              </div>
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-dash-text">Push Notifications</div>
-                <div className="text-xs text-dash-muted mt-0.5">Receive alerts for tracked flights</div>
-              </div>
-              <div className="w-10 h-6 bg-slate-200 rounded-full relative cursor-pointer">
-                <div className="w-4 h-4 bg-white rounded-full absolute top-1 left-1 shadow-sm" />
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row gap-8 items-start">
+        {/* Vertical Tab Navigation */}
+        <div className="w-full md:w-64 space-y-1 bg-white p-2 rounded-xl border border-dash-border flex-shrink-0 animate-slide-up">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              disabled={tab.disabled}
+              onClick={() => setActiveTab(tab.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-sky-50 text-sky-600'
+                  : tab.disabled
+                  ? 'opacity-50 cursor-not-allowed text-dash-muted'
+                  : 'text-dash-muted hover:bg-slate-50 hover:text-dash-text'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+              {tab.disabled && (
+                <span className="ml-auto text-[10px] uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Coming Soon</span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* API Section */}
-        <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '75ms', animationFillMode: 'both' }}>
-          <div className="px-5 py-4 border-b border-dash-border">
-            <h3 className="text-base font-semibold text-dash-text">API Configuration</h3>
-          </div>
-          <div className="px-5 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-medium text-dash-text">Aviation Stack API</div>
-                <div className="text-xs text-dash-muted mt-0.5">Status of your API connection</div>
+        {/* Tab Content */}
+        <div className="flex-1 w-full space-y-6">
+          {activeTab === 'general' && isClient && (
+            <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+              <div className="px-6 py-5 border-b border-dash-border bg-slate-50/50">
+                <h3 className="text-base font-semibold text-dash-text">General Preferences</h3>
+                <p className="text-sm text-dash-muted mt-1">Configure units and timezone logic for all flight data.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
-                <span className="text-xs font-medium text-emerald-600">Connected</span>
+              <div className="divide-y divide-dash-border">
+                {/* Distance Unit */}
+                <div className="px-6 py-5 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-dash-text">Distance Unit</div>
+                    <div className="text-sm text-dash-muted mt-0.5">Used for flight paths and range</div>
+                  </div>
+                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button onClick={() => updateSetting('distanceUnit', 'km')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'km' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Kilometers</button>
+                    <button onClick={() => updateSetting('distanceUnit', 'miles')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'miles' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Miles</button>
+                  </div>
+                </div>
+                {/* Altitude Unit */}
+                <div className="px-6 py-5 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-dash-text">Altitude Unit</div>
+                    <div className="text-sm text-dash-muted mt-0.5">Used for live flight altitude tracking</div>
+                  </div>
+                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Meters</button>
+                    <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Feet</button>
+                  </div>
+                </div>
+                {/* Timezone Logic */}
+                <div className="px-6 py-5">
+                  <div className="mb-4">
+                    <div className="text-sm font-medium text-dash-text">Timezone Display</div>
+                    <div className="text-sm text-dash-muted mt-0.5">How should departure and arrival times be shown?</div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[
+                      { id: 'local', title: 'My Local Time', desc: 'Convert all flight times to your current timezone.' },
+                      { id: 'utc', title: 'UTC', desc: 'Standard aviation time (Zulu).' },
+                      { id: 'airport', title: 'Airport Time', desc: 'Use the local timezone of the departure/arrival airport.' }
+                    ].map((tz) => (
+                      <button 
+                        key={tz.id}
+                        onClick={() => updateSetting('timezone', tz.id as any)}
+                        className={`text-left p-4 rounded-xl border transition-all ${settings.timezone === tz.id ? 'border-sky-500 bg-sky-50/50 ring-1 ring-sky-500' : 'border-dash-border hover:border-slate-300 bg-white'}`}
+                      >
+                        <div className={`text-sm font-semibold mb-1 ${settings.timezone === tz.id ? 'text-sky-700' : 'text-dash-text'}`}>{tz.title}</div>
+                        <div className={`text-xs ${settings.timezone === tz.id ? 'text-sky-600/80' : 'text-dash-muted'}`}>{tz.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* About Section */}
-        <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-          <div className="px-5 py-4 border-b border-dash-border">
-            <h3 className="text-base font-semibold text-dash-text">About</h3>
-          </div>
-          <div className="px-5 py-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-dash-muted">Version</span>
-              <span className="font-mono text-dash-text">1.0.0</span>
+          {activeTab === 'appearance' && isClient && (
+            <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+              <div className="px-6 py-5 border-b border-dash-border bg-slate-50/50">
+                <h3 className="text-base font-semibold text-dash-text">Theme Accents</h3>
+                <p className="text-sm text-dash-muted mt-1">Personalize the look and feel of your command center.</p>
+              </div>
+              <div className="px-6 py-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { id: 'sky', name: 'Sky Blue', color: 'bg-sky-500' },
+                    { id: 'emerald', name: 'ATC Emerald', color: 'bg-emerald-500' },
+                    { id: 'amber', name: 'Radar Amber', color: 'bg-amber-500' },
+                  ].map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => updateSetting('themeAccent', theme.id as any)}
+                      className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${settings.themeAccent === theme.id ? 'border-sky-500 bg-slate-50' : 'border-transparent bg-slate-50 hover:bg-slate-100'}`}
+                    >
+                      <div className={`w-12 h-12 rounded-full ${theme.color} mb-3 shadow-sm ring-4 ring-white`} />
+                      <span className="text-sm font-medium text-dash-text">{theme.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-dash-muted">Framework</span>
-              <span className="font-mono text-dash-text">Next.js 16</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-dash-muted">Styling</span>
-              <span className="font-mono text-dash-text">Tailwind CSS v3</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </DashboardShell>
