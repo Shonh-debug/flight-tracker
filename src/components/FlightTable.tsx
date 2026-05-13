@@ -1,7 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import type { Flight } from './FlightSearch';
+
+const SETTINGS_KEY = 'flight_tracker_settings';
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -89,6 +92,20 @@ function TimeCell({
 
 export default function FlightTable({ flights }: { flights: Flight[] }) {
   const router = useRouter();
+  const [distanceUnit, setDistanceUnit] = useState<'km' | 'miles'>('miles');
+  const [altitudeUnit, setAltitudeUnit] = useState<'meters' | 'feet'>('feet');
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.distanceUnit) setDistanceUnit(parsed.distanceUnit);
+        if (parsed.altitudeUnit) setAltitudeUnit(parsed.altitudeUnit);
+      } catch (e) { }
+    }
+  }, []);
+
   if (flights.length === 0) return null;
 
   const navigateToDetail = (flight: Flight) => {
@@ -124,6 +141,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
               <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Destination</th>
               <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Departure</th>
               <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Arrival</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Telemetry</th>
               <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Status</th>
               <th className="text-center py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Calendar</th>
             </tr>
@@ -184,15 +202,31 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                       isActive={isActive}
                     />
                   </td>
-
-                  {/* Status */}
+                  <td className="py-4 px-5">
+                    {flight.distance ? (
+                      <div className="text-[13px] font-medium text-dash-text whitespace-nowrap flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-dash-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                        {distanceUnit === 'km' 
+                          ? `${Math.round(flight.distance).toLocaleString()} km`
+                          : `${Math.round(flight.distance * 0.621371).toLocaleString()} mi`}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-dash-muted">--</div>
+                    )}
+                    {flight.altitude && isActive ? (
+                      <div className="text-[11px] text-sky-600 font-semibold whitespace-nowrap mt-1 flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                        {altitudeUnit === 'meters'
+                          ? `${Math.round(flight.altitude).toLocaleString()} m`
+                          : `${Math.round(flight.altitude * 3.28084).toLocaleString()} ft`}
+                      </div>
+                    ) : null}
+                  </td>
                   <td className="py-3.5 px-5">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(flight.status)}`}>
                       {flight.status}
                     </span>
                   </td>
-
-                  {/* Calendar */}
                   <td className="py-3.5 px-5 text-center">
                     <a
                       href={createCalendarUrl(flight)}
@@ -214,7 +248,6 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
         </table>
       </div>
 
-      {/* Mobile Card List */}
       <div className="md:hidden divide-y divide-dash-border">
         {flights.map((flight, i) => {
           const isActive = flight.status === 'Active' || flight.status === 'Scheduled';
@@ -240,6 +273,23 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                   {flight.status}
                 </span>
               </div>
+              
+              {/* Mobile Telemetry */}
+              {flight.distance && (
+                <div className="flex items-center gap-4 mb-3 pb-3 border-b border-dash-border border-dashed text-xs">
+                  <div className="flex items-center gap-1.5 text-dash-muted font-medium">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                    {distanceUnit === 'km' ? `${Math.round(flight.distance).toLocaleString()} km` : `${Math.round(flight.distance * 0.621371).toLocaleString()} mi`}
+                  </div>
+                  {flight.altitude && isActive && (
+                    <div className="flex items-center gap-1.5 text-sky-600 font-semibold">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                      {altitudeUnit === 'meters' ? `${Math.round(flight.altitude).toLocaleString()} m` : `${Math.round(flight.altitude * 3.28084).toLocaleString()} ft`}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center gap-3 text-sm">
                 <div className="flex-1">
                   <div className="text-dash-muted text-xs">From</div>

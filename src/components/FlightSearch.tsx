@@ -28,6 +28,8 @@ export type Flight = {
   flightDate: string;
   rawDeparture: string;
   rawArrival: string;
+  distance: number | null;
+  altitude: number | null;
 };
 
 // Returns CSS variables for each status

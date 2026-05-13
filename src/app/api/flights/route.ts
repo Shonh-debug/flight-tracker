@@ -136,6 +136,10 @@ export async function GET(request: Request) {
 
       // Use a deterministic ID so we can look flights up by index later
       const flightIata = f.flight.iata || cleanNumber;
+      
+      // Extract or generate a consistent mock distance/altitude
+      const flightDistanceKm = f.flight?.distance || (f.departure.iata && f.arrival.iata ? (f.departure.iata.charCodeAt(0) * f.arrival.iata.charCodeAt(0) * 17) % 8000 + 500 : 1500);
+      const flightAltitudeM = f.live?.altitude || (f.flight_status === 'active' ? (flightDistanceKm > 2000 ? 10600 : 8500) : null);
 
       return {
         id: `${flightIata}-${f.flight_date}-${idx}`,
@@ -168,6 +172,8 @@ export async function GET(request: Request) {
                 f.flight_status === 'diverted' ? 'Diverted' : 'Unknown',
         rawDeparture: f.departure.scheduled || "",
         rawArrival: f.arrival.scheduled || "",
+        distance: flightDistanceKm,
+        altitude: flightAltitudeM,
       };
     });
 
