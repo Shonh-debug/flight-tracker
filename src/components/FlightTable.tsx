@@ -156,7 +156,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
               return (
                 <tr
                   key={flight.id}
-                  className={`hover:bg-sky-50/50 transition-colors group cursor-pointer animate-slide-up ${isPast ? 'opacity-70' : ''}`}
+                  className={`hover:bg-theme-50/50 transition-colors group cursor-pointer animate-slide-up ${isPast ? 'opacity-70' : ''}`}
                   style={{ animationDelay: `${Math.min(i * 30, 800)}ms`, animationFillMode: 'both' }}
                   onClick={() => navigateToDetail(flight)}
                 >
@@ -214,7 +214,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                       <div className="text-xs text-dash-muted">--</div>
                     )}
                     {flight.altitude && isActive ? (
-                      <div className="text-[11px] text-sky-600 font-semibold whitespace-nowrap mt-1 flex items-center gap-1.5">
+                      <div className="text-[11px] text-theme-600 font-semibold whitespace-nowrap mt-1 flex items-center gap-1.5">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
                         {altitudeUnit === 'meters'
                           ? `${Math.round(flight.altitude).toLocaleString()} m`
@@ -233,7 +233,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-dash-muted hover:text-sky-600 hover:bg-sky-50 transition-colors"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-dash-muted hover:text-theme-600 hover:bg-theme-50 transition-colors"
                       title="Add to Google Calendar"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,7 +257,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
           return (
             <div
               key={flight.id}
-              className={`block px-4 py-4 hover:bg-sky-50/50 transition-colors animate-slide-up cursor-pointer ${isPast ? 'opacity-70' : ''}`}
+              className={`block px-4 py-4 hover:bg-theme-50/50 transition-colors animate-slide-up cursor-pointer ${isPast ? 'opacity-70' : ''}`}
               style={{ animationDelay: `${Math.min(i * 30, 800)}ms`, animationFillMode: 'both' }}
               onClick={() => navigateToDetail(flight)}
             >
@@ -282,7 +282,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                     {distanceUnit === 'km' ? `${Math.round(flight.distance).toLocaleString()} km` : `${Math.round(flight.distance * 0.621371).toLocaleString()} mi`}
                   </div>
                   {flight.altitude && isActive && (
-                    <div className="flex items-center gap-1.5 text-sky-600 font-semibold">
+                    <div className="flex items-center gap-1.5 text-theme-600 font-semibold">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
                       {altitudeUnit === 'meters' ? `${Math.round(flight.altitude).toLocaleString()} m` : `${Math.round(flight.altitude * 3.28084).toLocaleString()} ft`}
                     </div>

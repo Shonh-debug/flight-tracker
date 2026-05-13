@@ -26,7 +26,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const stored = localStorage.getItem('flight_tracker_settings');
+                if (stored) {
+                  const settings = JSON.parse(stored);
+                  if (settings.themeAccent && settings.themeAccent !== 'sky') {
+                    document.documentElement.setAttribute('data-theme', settings.themeAccent);
+                  }
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

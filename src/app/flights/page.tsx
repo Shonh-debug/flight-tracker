@@ -96,7 +96,7 @@ export default function FlightsPage() {
               <button
                 key={example}
                 onClick={() => setSearchValue(example)}
-                className="px-4 py-2 bg-slate-50 border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-sky-600 hover:border-sky-300 hover:bg-sky-50 transition-all"
+                className="px-4 py-2 bg-slate-50 border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-theme-600 hover:border-theme-300 hover:bg-theme-50 transition-all"
               >
                 {example}
               </button>

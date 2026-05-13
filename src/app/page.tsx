@@ -72,9 +72,9 @@ function DashboardContent() {
       {/* Welcome / Hero when no search has been done */}
       {!searched && (
         <div className="flex flex-col items-center justify-center py-16 md:py-24 animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-sky-100 flex items-center justify-center mb-6">
+          <div className="w-20 h-20 rounded-2xl bg-theme-100 flex items-center justify-center mb-6">
             <svg
-              className="w-10 h-10 text-sky-500"
+              className="w-10 h-10 text-theme-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -101,7 +101,7 @@ function DashboardContent() {
                 onClick={() => {
                   setSearchValue(example);
                 }}
-                className="px-4 py-2 bg-white border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-sky-600 hover:border-sky-300 hover:bg-sky-50 transition-all"
+                className="px-4 py-2 bg-white border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-theme-600 hover:border-theme-300 hover:bg-theme-50 transition-all"
               >
                 {example}
               </button>

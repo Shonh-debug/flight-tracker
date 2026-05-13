@@ -9,6 +9,40 @@
     padding: 0;
   }
 
+  :root {
+    /* Default: Sky Blue */
+    --theme-50: 240 249 255;
+    --theme-100: 224 242 254;
+    --theme-200: 186 230 253;
+    --theme-300: 125 211 252;
+    --theme-400: 56 189 248;
+    --theme-500: 14 165 233;
+    --theme-600: 2 132 199;
+    --theme-700: 3 105 161;
+  }
+
+  [data-theme='emerald'] {
+    --theme-50: 236 253 245;
+    --theme-100: 209 250 229;
+    --theme-200: 167 243 208;
+    --theme-300: 110 231 183;
+    --theme-400: 52 211 153;
+    --theme-500: 16 185 129;
+    --theme-600: 5 150 105;
+    --theme-700: 4 120 87;
+  }
+
+  [data-theme='amber'] {
+    --theme-50: 255 251 235;
+    --theme-100: 254 243 199;
+    --theme-200: 253 230 138;
+    --theme-300: 252 211 77;
+    --theme-400: 251 191 36;
+    --theme-500: 245 158 11;
+    --theme-600: 217 119 6;
+    --theme-700: 180 83 9;
+  }
+
   body {
     @apply bg-dash-bg text-dash-text font-sans antialiased;
     min-height: 100vh;

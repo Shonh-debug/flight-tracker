@@ -43,6 +43,14 @@ export default function SettingsPage() {
     setSettings(newSettings);
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
     
+    if (key === 'themeAccent') {
+      if (value === 'sky') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', value as string);
+      }
+    }
+    
     // Show toast
     setToastMessage('Setting saved');
     setTimeout(() => setToastMessage(null), 2000);
@@ -104,7 +112,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-sky-50 text-sky-600'
+                  ? 'bg-theme-50 text-theme-600'
                   : tab.disabled
                   ? 'opacity-50 cursor-not-allowed text-dash-muted'
                   : 'text-dash-muted hover:bg-slate-50 hover:text-dash-text'
@@ -135,8 +143,8 @@ export default function SettingsPage() {
                     <div className="text-sm text-dash-muted mt-0.5">Used for flight paths and range</div>
                   </div>
                   <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button onClick={() => updateSetting('distanceUnit', 'km')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'km' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Kilometers</button>
-                    <button onClick={() => updateSetting('distanceUnit', 'miles')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'miles' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Miles</button>
+                    <button onClick={() => updateSetting('distanceUnit', 'km')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'km' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Kilometers</button>
+                    <button onClick={() => updateSetting('distanceUnit', 'miles')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'miles' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Miles</button>
                   </div>
                 </div>
                 {/* Altitude Unit */}
@@ -146,8 +154,8 @@ export default function SettingsPage() {
                     <div className="text-sm text-dash-muted mt-0.5">Used for live flight altitude tracking</div>
                   </div>
                   <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Meters</button>
-                    <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-white text-sky-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Feet</button>
+                    <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Meters</button>
+                    <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Feet</button>
                   </div>
                 </div>
                 {/* Timezone Logic */}
@@ -165,10 +173,10 @@ export default function SettingsPage() {
                       <button 
                         key={tz.id}
                         onClick={() => updateSetting('timezone', tz.id as any)}
-                        className={`text-left p-4 rounded-xl border transition-all ${settings.timezone === tz.id ? 'border-sky-500 bg-sky-50/50 ring-1 ring-sky-500' : 'border-dash-border hover:border-slate-300 bg-white'}`}
+                        className={`text-left p-4 rounded-xl border transition-all ${settings.timezone === tz.id ? 'border-theme-500 bg-theme-50/50 ring-1 ring-theme-500' : 'border-dash-border hover:border-slate-300 bg-white'}`}
                       >
-                        <div className={`text-sm font-semibold mb-1 ${settings.timezone === tz.id ? 'text-sky-700' : 'text-dash-text'}`}>{tz.title}</div>
-                        <div className={`text-xs ${settings.timezone === tz.id ? 'text-sky-600/80' : 'text-dash-muted'}`}>{tz.desc}</div>
+                        <div className={`text-sm font-semibold mb-1 ${settings.timezone === tz.id ? 'text-theme-700' : 'text-dash-text'}`}>{tz.title}</div>
+                        <div className={`text-xs ${settings.timezone === tz.id ? 'text-theme-600/80' : 'text-dash-muted'}`}>{tz.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -193,7 +201,7 @@ export default function SettingsPage() {
                     <button
                       key={theme.id}
                       onClick={() => updateSetting('themeAccent', theme.id as any)}
-                      className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${settings.themeAccent === theme.id ? 'border-sky-500 bg-slate-50' : 'border-transparent bg-slate-50 hover:bg-slate-100'}`}
+                      className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${settings.themeAccent === theme.id ? 'border-theme-500 bg-slate-50' : 'border-transparent bg-slate-50 hover:bg-slate-100'}`}
                     >
                       <div className={`w-12 h-12 rounded-full ${theme.color} mb-3 shadow-sm ring-4 ring-white`} />
                       <span className="text-sm font-medium text-dash-text">{theme.name}</span>

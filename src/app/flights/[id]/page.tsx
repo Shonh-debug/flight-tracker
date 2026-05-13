@@ -27,7 +27,7 @@ function getStatusAccentBar(status: string) {
     case 'Cancelled': return 'from-red-400 to-red-600';
     case 'Diverted':  return 'from-purple-400 to-purple-600';
     case 'Incident':  return 'from-orange-400 to-orange-600';
-    default:          return 'from-sky-400 to-sky-600';
+    default:          return 'from-theme-400 to-theme-600';
   }
 }
 
@@ -116,7 +116,7 @@ export default function FlightDetailPage() {
             } else {
               router.push('/');
             }
-          }} className="flex items-center gap-2 text-sm text-dash-muted hover:text-sky-600 transition-colors">
+          }} className="flex items-center gap-2 text-sm text-dash-muted hover:text-theme-600 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             Back to Results
           </button>
@@ -128,7 +128,7 @@ export default function FlightDetailPage() {
             href={createCalendarUrl(flight)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-dash-muted hover:text-sky-600 hover:bg-sky-50 border border-dash-border transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-dash-muted hover:text-theme-600 hover:bg-theme-50 border border-dash-border transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             Add to Calendar
@@ -172,8 +172,8 @@ export default function FlightDetailPage() {
 
                 {/* Route line */}
                 <div className="flex-1 flex flex-col items-center gap-1.5 min-w-[80px]">
-                  <svg className="w-6 h-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" /></svg>
-                  <div className="w-full h-px bg-gradient-to-r from-slate-200 via-sky-300 to-slate-200" />
+                  <svg className="w-6 h-6 text-theme-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" /></svg>
+                  <div className="w-full h-px bg-gradient-to-r from-slate-200 via-theme-300 to-slate-200" />
                 </div>
 
                 {/* Arrival IATA */}

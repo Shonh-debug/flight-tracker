@@ -75,11 +75,11 @@ export default function TopBar({
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Flight ID "
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-dash-border rounded-lg text-sm text-dash-text placeholder:text-dash-muted focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-dash-border rounded-lg text-sm text-dash-text placeholder:text-dash-muted focus:outline-none focus:ring-2 focus:ring-theme-500/50 focus:border-theme-500 transition-all"
           />
           {loading && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-theme-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
         </div>
@@ -90,7 +90,7 @@ export default function TopBar({
         id="search-button"
         onClick={onSearchSubmit}
         disabled={loading}
-        className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+        className="px-4 py-2 bg-theme-500 hover:bg-theme-600 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
       >
         {loading ? (
           <>
