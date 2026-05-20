@@ -8,14 +8,12 @@ const SETTINGS_KEY = 'flight_tracker_settings';
 type SettingsState = {
   distanceUnit: 'km' | 'miles';
   altitudeUnit: 'meters' | 'feet';
-  timezone: 'local' | 'utc' | 'airport';
   themeAccent: 'sky' | 'emerald' | 'amber';
 };
 
 const defaultSettings: SettingsState = {
   distanceUnit: 'miles',
   altitudeUnit: 'feet',
-  timezone: 'local',
   themeAccent: 'sky',
 };
 
@@ -156,29 +154,6 @@ export default function SettingsPage() {
                   <div className="flex bg-slate-100 p-1 rounded-lg">
                     <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Meters</button>
                     <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>Feet</button>
-                  </div>
-                </div>
-                {/* Timezone Logic */}
-                <div className="px-6 py-5">
-                  <div className="mb-4">
-                    <div className="text-sm font-medium text-dash-text">Timezone Display</div>
-                    <div className="text-sm text-dash-muted mt-0.5">How should departure and arrival times be shown?</div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[
-                      { id: 'local', title: 'My Local Time', desc: 'Convert all flight times to your current timezone.' },
-                      { id: 'utc', title: 'UTC', desc: 'Standard aviation time (Zulu).' },
-                      { id: 'airport', title: 'Airport Time', desc: 'Use the local timezone of the departure/arrival airport.' }
-                    ].map((tz) => (
-                      <button 
-                        key={tz.id}
-                        onClick={() => updateSetting('timezone', tz.id as any)}
-                        className={`text-left p-4 rounded-xl border transition-all ${settings.timezone === tz.id ? 'border-theme-500 bg-theme-50/50 ring-1 ring-theme-500' : 'border-dash-border hover:border-slate-300 bg-white'}`}
-                      >
-                        <div className={`text-sm font-semibold mb-1 ${settings.timezone === tz.id ? 'text-theme-700' : 'text-dash-text'}`}>{tz.title}</div>
-                        <div className={`text-xs ${settings.timezone === tz.id ? 'text-theme-600/80' : 'text-dash-muted'}`}>{tz.desc}</div>
-                      </button>
-                    ))}
                   </div>
                 </div>
               </div>
