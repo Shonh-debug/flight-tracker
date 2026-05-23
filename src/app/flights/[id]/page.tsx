@@ -70,6 +70,7 @@ export default function FlightDetailPage() {
   const router = useRouter();
   const [flight, setFlight] = useState<Flight | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('selectedFlight');
@@ -83,6 +84,37 @@ export default function FlightDetailPage() {
       router.push('/');
     }
   }, [router]);
+
+  useEffect(() => {
+    if (!flight) return;
+    try {
+      const savedList = localStorage.getItem('flight_tracker_watchlist');
+      const watchlist: Flight[] = savedList ? JSON.parse(savedList) : [];
+      setIsSaved(watchlist.some((f) => f.id === flight.id));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [flight]);
+
+  const toggleWatchlist = () => {
+    if (!flight) return;
+    try {
+      const savedList = localStorage.getItem('flight_tracker_watchlist');
+      let watchlist: Flight[] = savedList ? JSON.parse(savedList) : [];
+      const alreadySaved = watchlist.some((f) => f.id === flight.id);
+
+      if (alreadySaved) {
+        watchlist = watchlist.filter((f) => f.id !== flight.id);
+        setIsSaved(false);
+      } else {
+        watchlist.push(flight);
+        setIsSaved(true);
+      }
+      localStorage.setItem('flight_tracker_watchlist', JSON.stringify(watchlist));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (!flight) {
     return (
@@ -124,6 +156,31 @@ export default function FlightDetailPage() {
           </button>
 
           <div className="flex-1" />
+
+          {/* Watchlist Toggle */}
+          <button
+            onClick={toggleWatchlist}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+              isSaved
+                ? 'bg-theme-500 text-white border-theme-500 hover:bg-theme-600'
+                : 'text-dash-muted hover:text-theme-600 hover:bg-theme-50 border-dash-border'
+            }`}
+          >
+            <svg
+              className="w-4 h-4"
+              fill={isSaved ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+              />
+            </svg>
+            {isSaved ? 'In Watchlist' : 'Add to Watchlist'}
+          </button>
 
           {/* Add to Google Calendar */}
           <a
