@@ -7,6 +7,45 @@ import StatsCards from '@/components/StatsCards';
 import FlightTable from '@/components/FlightTable';
 import type { Flight } from '@/components/FlightSearch';
 
+const RECENT_SEARCHES_KEY = 'flight_tracker_recent_searches';
+const MAX_RECENT = 5;
+
+type RecentSearch = {
+  query: string;
+  flightNumber: string;
+  startIata: string;
+  endIata: string;
+  airline: string;
+  timestamp: number;
+};
+
+function loadRecentSearches(): RecentSearch[] {
+  try {
+    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentSearch(entry: Omit<RecentSearch, 'timestamp'>) {
+  const existing = loadRecentSearches();
+  // Remove duplicates by flight number
+  const filtered = existing.filter(
+    (s) => s.flightNumber.toUpperCase() !== entry.flightNumber.toUpperCase()
+  );
+  const updated: RecentSearch[] = [
+    { ...entry, timestamp: Date.now() },
+    ...filtered,
+  ].slice(0, MAX_RECENT);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+function clearRecentSearches() {
+  localStorage.removeItem(RECENT_SEARCHES_KEY);
+}
+
 function DashboardContent() {
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState('');
@@ -14,6 +53,14 @@ function DashboardContent() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Load recent searches from localStorage on mount
+  useEffect(() => {
+    setIsClient(true);
+    setRecentSearches(loadRecentSearches());
+  }, []);
 
   const doSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
@@ -34,7 +81,21 @@ function DashboardContent() {
         return;
       }
 
-      setFlights(data.flights || []);
+      const fetchedFlights: Flight[] = data.flights || [];
+      setFlights(fetchedFlights);
+
+      // Save to recent searches if we got results
+      if (fetchedFlights.length > 0) {
+        const first = fetchedFlights[0];
+        const updated = saveRecentSearch({
+          query: query.trim(),
+          flightNumber: first.flightNumber,
+          startIata: first.startIata,
+          endIata: first.endIata,
+          airline: first.airlineName,
+        });
+        setRecentSearches(updated);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to fetch flights');
@@ -61,6 +122,13 @@ function DashboardContent() {
   const handleSearch = async () => {
     await doSearch(searchValue);
   };
+
+  const handleClearHistory = () => {
+    clearRecentSearches();
+    setRecentSearches([]);
+  };
+
+  const hasRecent = isClient && recentSearches.length > 0;
 
   return (
     <DashboardShell
@@ -94,19 +162,77 @@ function DashboardContent() {
             Enter a flight number above to get real-time status updates,
             departure and arrival information, and more.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {['AA123', 'ACA228', 'UA456'].map((example) => (
-              <button
-                key={example}
-                onClick={() => {
-                  setSearchValue(example);
-                }}
-                className="px-4 py-2 bg-white border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-theme-600 hover:border-theme-300 hover:bg-theme-50 transition-all"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
+
+          {/* Recent Searches or Example Flights */}
+          {hasRecent ? (
+            <div className="w-full max-w-lg">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <div className="flex items-center gap-2 text-sm text-dash-muted">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">Recent Searches</span>
+                </div>
+                <button
+                  onClick={handleClearHistory}
+                  className="text-xs text-dash-muted hover:text-red-500 transition-colors"
+                >
+                  Clear history
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {recentSearches.map((recent, i) => (
+                  <button
+                    key={`${recent.flightNumber}-${recent.timestamp}`}
+                    onClick={() => doSearch(recent.query)}
+                    className="group flex items-center gap-3 px-4 py-3 bg-white border border-dash-border rounded-xl hover:border-theme-300 hover:bg-theme-50/50 hover:shadow-sm transition-all animate-slide-up"
+                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-theme-50 flex items-center justify-center flex-shrink-0 group-hover:bg-theme-100 transition-colors">
+                      <svg className="w-4 h-4 text-theme-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-dash-text font-mono">
+                          {recent.flightNumber}
+                        </span>
+                        <span className="text-xs text-dash-muted">·</span>
+                        <span className="text-xs text-dash-muted font-medium truncate">
+                          {recent.airline}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-dash-muted mt-0.5">
+                        <span className="font-semibold text-dash-text">{recent.startIata}</span>
+                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        <span className="font-semibold text-dash-text">{recent.endIata}</span>
+                      </div>
+                    </div>
+                    <svg className="w-4 h-4 text-slate-300 group-hover:text-theme-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-3">
+              {['AA123', 'ACA228', 'UA456'].map((example) => (
+                <button
+                  key={example}
+                  onClick={() => {
+                    setSearchValue(example);
+                  }}
+                  className="px-4 py-2 bg-white border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-theme-600 hover:border-theme-300 hover:bg-theme-50 transition-all"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
