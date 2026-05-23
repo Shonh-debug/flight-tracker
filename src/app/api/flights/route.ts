@@ -132,8 +132,23 @@ export async function GET(request: Request) {
     }
 
     const results: Flight[] = data.data.map((f: any, idx: number) => {
-      const depDelay: number | null = typeof f.departure.delay === 'number' ? f.departure.delay : null;
-      const arrDelay: number | null = typeof f.arrival.delay === 'number' ? f.arrival.delay : null;
+      // Calculate delay ourselves by comparing estimated vs. scheduled ISO timestamps
+      // Positive = late, negative = early, null = no estimate available
+      function computeDelay(scheduled: string | null, estimated: string | null): number | null {
+        if (!scheduled || !estimated) return null;
+        try {
+          const schedMs = new Date(scheduled).getTime();
+          const estMs = new Date(estimated).getTime();
+          if (isNaN(schedMs) || isNaN(estMs)) return null;
+          const diffMin = Math.round((estMs - schedMs) / 60000);
+          return diffMin === 0 ? null : diffMin;
+        } catch {
+          return null;
+        }
+      }
+
+      const depDelay = computeDelay(f.departure.scheduled, f.departure.estimated);
+      const arrDelay = computeDelay(f.arrival.scheduled, f.arrival.estimated);
 
       // Only show estimated time if it meaningfully differs from scheduled
       const scheduledDep = formatTime(f.departure.scheduled, f.departure.timezone);
