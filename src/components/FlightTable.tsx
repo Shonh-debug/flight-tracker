@@ -54,12 +54,18 @@ function createCalendarUrl(flight: Flight) {
 }
 
 function DelayBadge({ minutes }: { minutes: number }) {
+  const isEarly = minutes < 0;
+  const absMin = Math.abs(minutes);
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+      isEarly
+        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+        : 'bg-amber-100 text-amber-700 border-amber-300'
+    }`}>
       <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      +{minutes}m
+      {isEarly ? `${absMin}m early` : `+${absMin}m late`}
     </span>
   );
 }
@@ -76,15 +82,16 @@ function TimeCell({
   isActive: boolean;
 }) {
   const hasDelay = isActive && delay !== null && delay > 0;
+  const isEarly = isActive && delay !== null && delay < 0;
   const hasEstimated = isActive && estimated !== null && estimated !== scheduled;
 
   return (
     <div className="font-mono">
-      <div className={`text-sm ${hasDelay ? 'line-through text-dash-muted' : 'text-dash-text'}`}>
+      <div className={`text-sm ${hasDelay || isEarly ? 'line-through text-dash-muted' : 'text-dash-text'}`}>
         {scheduled}
       </div>
       {hasEstimated && (
-        <div className="text-xs text-amber-600 font-semibold mt-0.5">{estimated}</div>
+        <div className={`text-xs font-semibold mt-0.5 ${isEarly ? 'text-emerald-600' : 'text-amber-600'}`}>{estimated}</div>
       )}
     </div>
   );
@@ -165,7 +172,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(flight.status)}`} />
                       <span className="font-semibold text-dash-text font-mono">{flight.flightNumber}</span>
-                      {isActive && depDelay !== null && depDelay > 0 && (
+                      {isActive && depDelay !== null && depDelay !== 0 && (
                         <DelayBadge minutes={depDelay} />
                       )}
                     </div>
@@ -265,7 +272,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className={`w-2 h-2 rounded-full ${getStatusDot(flight.status)}`} />
                   <span className="font-bold text-dash-text font-mono">{flight.flightNumber}</span>
-                  {isActive && depDelay !== null && depDelay > 0 && (
+                  {isActive && depDelay !== null && depDelay !== 0 && (
                     <DelayBadge minutes={depDelay} />
                   )}
                 </div>

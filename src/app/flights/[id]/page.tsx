@@ -53,12 +53,13 @@ function createCalendarUrl(flight: Flight) {
 
 // ─── Info row component ───
 
-function InfoRow({ label, value, accent }: { label: string; value: string | null | undefined; accent?: boolean }) {
+function InfoRow({ label, value, accent, accentColor }: { label: string; value: string | null | undefined; accent?: boolean; accentColor?: 'amber' | 'emerald' }) {
   if (!value) return null;
+  const colorClass = accent ? (accentColor === 'emerald' ? 'text-emerald-600' : 'text-amber-600') : 'text-dash-text';
   return (
     <div className="flex justify-between items-center py-2.5 border-b border-dash-border last:border-b-0">
       <span className="text-sm text-dash-muted">{label}</span>
-      <span className={`text-sm font-medium ${accent ? 'text-amber-600' : 'text-dash-text'} font-mono`}>{value}</span>
+      <span className={`text-sm font-medium ${colorClass} font-mono`}>{value}</span>
     </div>
   );
 }
@@ -94,6 +95,7 @@ export default function FlightDetailPage() {
   const sc = getStatusColor(flight.status);
   const accentBar = getStatusAccentBar(flight.status);
   const isDelayed = (flight.departureDelay ?? 0) > 0 || (flight.arrivalDelay ?? 0) > 0;
+  const isEarly = (flight.departureDelay ?? 0) < 0 || (flight.arrivalDelay ?? 0) < 0;
   const isCancelled = flight.status === 'Cancelled';
   const isActive = flight.status === 'Active' || flight.status === 'Scheduled';
 
@@ -153,7 +155,13 @@ export default function FlightDetailPage() {
                   {isDelayed && isActive && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      +{flight.departureDelay ?? flight.arrivalDelay} min delay
+                      +{Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)} min delay
+                    </span>
+                  )}
+                  {isEarly && !isDelayed && isActive && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      {Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)} min early
                     </span>
                   )}
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${sc.bg} ${sc.text} border ${sc.border}`}>
@@ -203,15 +211,19 @@ export default function FlightDetailPage() {
                 <InfoRow label="Date" value={flight.startDate} />
                 <InfoRow label="Scheduled" value={flight.startTime} />
                 {isActive && flight.startEstimatedTime && (
-                  <InfoRow label="Estimated" value={flight.startEstimatedTime} accent />
+                  <InfoRow label="Estimated" value={flight.startEstimatedTime} accent accentColor={(flight.departureDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
                 )}
                 {flight.startTerminal && <InfoRow label="Terminal" value={flight.startTerminal} />}
                 {flight.startGate && <InfoRow label="Gate" value={flight.startGate} />}
-                {isActive && flight.departureDelay !== null && flight.departureDelay > 0 && (
+                {isActive && flight.departureDelay !== null && flight.departureDelay !== 0 && (
                   <div className="flex justify-between items-center py-2.5 border-b border-dash-border last:border-b-0">
-                    <span className="text-sm text-dash-muted">Delay</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300">
-                      +{flight.departureDelay} min
+                    <span className="text-sm text-dash-muted">{flight.departureDelay < 0 ? 'Early' : 'Delay'}</span>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold border ${
+                      flight.departureDelay < 0
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                        : 'bg-amber-100 text-amber-700 border-amber-300'
+                    }`}>
+                      {flight.departureDelay < 0 ? `${Math.abs(flight.departureDelay)} min early` : `+${flight.departureDelay} min`}
                     </span>
                   </div>
                 )}
@@ -230,15 +242,19 @@ export default function FlightDetailPage() {
                 <InfoRow label="Date" value={flight.endDate} />
                 <InfoRow label="Scheduled" value={flight.endTime} />
                 {isActive && flight.endEstimatedTime && (
-                  <InfoRow label="Estimated" value={flight.endEstimatedTime} accent />
+                  <InfoRow label="Estimated" value={flight.endEstimatedTime} accent accentColor={(flight.arrivalDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
                 )}
                 {flight.endTerminal && <InfoRow label="Terminal" value={flight.endTerminal} />}
                 {flight.endGate && <InfoRow label="Gate" value={flight.endGate} />}
-                {isActive && flight.arrivalDelay !== null && flight.arrivalDelay > 0 && (
+                {isActive && flight.arrivalDelay !== null && flight.arrivalDelay !== 0 && (
                   <div className="flex justify-between items-center py-2.5 border-b border-dash-border last:border-b-0">
-                    <span className="text-sm text-dash-muted">Delay</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300">
-                      +{flight.arrivalDelay} min
+                    <span className="text-sm text-dash-muted">{flight.arrivalDelay < 0 ? 'Early' : 'Delay'}</span>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold border ${
+                      flight.arrivalDelay < 0
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                        : 'bg-amber-100 text-amber-700 border-amber-300'
+                    }`}>
+                      {flight.arrivalDelay < 0 ? `${Math.abs(flight.arrivalDelay)} min early` : `+${flight.arrivalDelay} min`}
                     </span>
                   </div>
                 )}
