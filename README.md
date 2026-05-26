@@ -98,6 +98,7 @@ The Next.js API route (`/api/flights`) acts as a **secure middleware layer** bet
 - Estimated times (only shown when different from scheduled)
 - Delay in minutes for departure and arrival
 - Terminal and gate information
+- Airplane altitude data 
 - Flight status (`active`, `scheduled`, `landed`, `cancelled`, `diverted`, `incident`)
 
 ---
