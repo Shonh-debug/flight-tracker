@@ -2,7 +2,7 @@
 
 A real-time flight tracking web application that lets you look up any commercial flight by its flight number and see live status, departure/arrival info, delay data, and detailed boarding-pass-style flight pages.
 
-**🌐 Live Site:** [flight-tracker-plum.vercel.app](https://flight-tracker-plum.vercel.app)
+**Live Site:** [flight-tracker-plum.vercel.app](https://flight-tracker-plum.vercel.app)
 
 ---
 
@@ -23,7 +23,7 @@ Flight Tracker is a full-stack web application that integrates the **Aviation St
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### Frontend
 
@@ -54,7 +54,7 @@ Flight Tracker is a full-stack web application that integrates the **Aviation St
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 src/
@@ -75,11 +75,19 @@ src/
 │   ├── Sidebar.tsx             # Collapsible sidebar navigation
 │   ├── StatsCards.tsx          # Summary stat cards (total, active, delayed, etc.)
 │   └── TopBar.tsx              # Top search bar and header
+├── locales/                    # Support for 6 different languages 
+│   ├── en.ts                  
+│   ├── de.ts        
+│   ├── fr.ts         
+│   ├── index.ts             
+│   ├── ru.ts
+│   ├── vi.ts           
+│   └── zh.ts             
 ```
 
 ---
 
-## 🔌 API Integration
+## API Integration
 
 The app uses the **Aviation Stack** `/v1/flights` endpoint:
 
@@ -103,7 +111,7 @@ The Next.js API route (`/api/flights`) acts as a **secure middleware layer** bet
 
 ---
 
-## 🚀 Running Locally
+## Running Locally
 
 1. **Clone the repository**
    ```bash
