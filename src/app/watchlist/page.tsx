@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardShell from '@/components/DashboardShell';
 import type { Flight } from '@/components/FlightSearch';
+import { useLanguage } from '@/components/LanguageContext';
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -31,6 +32,7 @@ function getStatusAccentBar(status: string) {
 
 export default function WatchlistPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [searchValue, setSearchValue] = useState('');
   const [watchlist, setWatchlist] = useState<Flight[]>([]);
   const [isClient, setIsClient] = useState(false);
@@ -65,7 +67,7 @@ export default function WatchlistPage() {
   };
 
   const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to clear your entire watchlist?')) {
+    if (window.confirm(t.watchlistPage.clearConfirm)) {
       try {
         setWatchlist([]);
         localStorage.removeItem('flight_tracker_watchlist');
@@ -90,9 +92,9 @@ export default function WatchlistPage() {
     >
       <div className="animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-dash-text mb-1">Watchlist</h1>
+          <h1 className="text-2xl font-bold text-dash-text mb-1">{t.watchlistPage.title}</h1>
           <p className="text-dash-muted text-sm">
-            Your personal flight board. Keep track of pinned flights and monitor their schedule in real time.
+            {t.watchlistPage.subtitle}
           </p>
         </div>
         {isClient && watchlist.length > 0 && (
@@ -103,7 +105,7 @@ export default function WatchlistPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            Clear All
+            {t.watchlistPage.clearAll}
           </button>
         )}
       </div>
@@ -115,15 +117,15 @@ export default function WatchlistPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-dash-text mb-2 font-sans">No Pinned Flights</h3>
+          <h3 className="text-lg font-semibold text-dash-text mb-2 font-sans">{t.watchlistPage.emptyTitle}</h3>
           <p className="text-dash-muted text-sm max-w-sm mx-auto mb-6">
-            Track flights and bookmark them from their details page to create your personal live dashboard.
+            {t.watchlistPage.emptySubtitle}
           </p>
           <button
             onClick={() => router.push('/')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-theme-500 text-white hover:bg-theme-600 transition-colors shadow-sm"
           >
-            Search Flights
+            {t.watchlistPage.searchFlights}
           </button>
         </div>
       ) : (
@@ -164,7 +166,7 @@ export default function WatchlistPage() {
                     <button
                       onClick={(e) => handleRemove(e, flight.id)}
                       className="p-1.5 rounded-lg text-dash-muted hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
-                      title="Remove from watchlist"
+                      title={t.watchlistPage.removeFromWatchlist}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -197,7 +199,7 @@ export default function WatchlistPage() {
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Departure Date
+                        {t.watchlistPage.departureDate}
                       </span>
                       <span className="font-semibold text-dash-text font-mono">{flight.startDate}</span>
                     </div>
@@ -207,7 +209,7 @@ export default function WatchlistPage() {
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Scheduled Time
+                        {t.watchlistPage.scheduledTime}
                       </span>
                       <span className="font-semibold text-dash-text font-mono">{flight.startTime}</span>
                     </div>
@@ -215,15 +217,15 @@ export default function WatchlistPage() {
                     {/* Delay / Early labels if active */}
                     {isActive && (isDelayed || isEarly) && (
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-dash-muted">Status Info</span>
+                        <span className="text-dash-muted">{t.watchlistPage.statusInfo}</span>
                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                           isEarly
                             ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
                             : 'bg-amber-100 text-amber-700 border-amber-300'
                         }`}>
                           {isEarly
-                            ? `${Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)}m early`
-                            : `+${Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)}m delay`
+                            ? t.watchlistPage.earlyLabel.replace('{min}', String(Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)))
+                            : t.watchlistPage.delayLabel.replace('{min}', String(Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)))
                           }
                         </span>
                       </div>

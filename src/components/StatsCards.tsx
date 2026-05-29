@@ -1,6 +1,7 @@
 'use client';
 
 import type { Flight } from './FlightSearch';
+import { useLanguage } from '@/components/LanguageContext';
 
 type StatConfig = {
   label: string;
@@ -11,7 +12,7 @@ type StatConfig = {
   borderColor: string;
 };
 
-function getStats(flights: Flight[]): StatConfig[] {
+function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir: string; landed: string; delayed: string; cancelledDiverted: string }): StatConfig[] {
   const total = flights.length;
   const active = flights.filter((f) => f.status === 'Active').length;
   const landed = flights.filter((f) => f.status === 'Landed').length;
@@ -27,7 +28,7 @@ function getStats(flights: Flight[]): StatConfig[] {
 
   return [
     {
-      label: 'Total Flights',
+      label: labels.totalFlights,
       value: total,
       color: 'text-theme-600',
       bgColor: 'bg-theme-50',
@@ -39,7 +40,7 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Active / In Air',
+      label: labels.activeInAir,
       value: active,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
@@ -51,7 +52,7 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Landed',
+      label: labels.landed,
       value: landed,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
@@ -63,7 +64,7 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Delayed',
+      label: labels.delayed,
       value: delayed,
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
@@ -75,7 +76,7 @@ function getStats(flights: Flight[]): StatConfig[] {
       ),
     },
     {
-      label: 'Cancelled / Diverted',
+      label: labels.cancelledDiverted,
       value: cancelled,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
@@ -90,7 +91,8 @@ function getStats(flights: Flight[]): StatConfig[] {
 }
 
 export default function StatsCards({ flights }: { flights: Flight[] }) {
-  const stats = getStats(flights);
+  const { t } = useLanguage();
+  const stats = getStats(flights, t.stats);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

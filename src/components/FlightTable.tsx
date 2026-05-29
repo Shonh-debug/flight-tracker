@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import type { Flight } from './FlightSearch';
+import { useLanguage } from '@/components/LanguageContext';
 
 const SETTINGS_KEY = 'flight_tracker_settings';
 
@@ -53,7 +54,7 @@ function createCalendarUrl(flight: Flight) {
   }
 }
 
-function DelayBadge({ minutes }: { minutes: number }) {
+function DelayBadge({ minutes, earlyLabel, lateLabel }: { minutes: number; earlyLabel: string; lateLabel: string }) {
   const isEarly = minutes < 0;
   const absMin = Math.abs(minutes);
   return (
@@ -65,7 +66,7 @@ function DelayBadge({ minutes }: { minutes: number }) {
       <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      {isEarly ? `${absMin}m early` : `+${absMin}m late`}
+      {isEarly ? earlyLabel.replace('{min}', String(absMin)) : lateLabel.replace('{min}', String(absMin))}
     </span>
   );
 }
@@ -99,6 +100,7 @@ function TimeCell({
 
 export default function FlightTable({ flights }: { flights: Flight[] }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [distanceUnit, setDistanceUnit] = useState<'km' | 'miles'>('miles');
   const [altitudeUnit, setAltitudeUnit] = useState<'meters' | 'feet'>('feet');
 
@@ -124,17 +126,19 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
     router.push(`/flights/${encodeURIComponent(flight.id)}`);
   };
 
+  const plural = flights.length !== 1 ? 's' : '';
+
   return (
     <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-fade-in">
       {/* Table Header */}
       <div className="px-5 py-4 border-b border-dash-border flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-dash-text">Flight List</h3>
-          <p className="text-xs text-dash-muted mt-0.5">{flights.length} result{flights.length !== 1 ? 's' : ''} found</p>
+          <h3 className="text-base font-semibold text-dash-text">{t.flightTable.title}</h3>
+          <p className="text-xs text-dash-muted mt-0.5">{t.flightTable.resultsFound.replace('{count}', String(flights.length)).replace('{plural}', plural)}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
-          <span className="text-xs text-dash-muted font-medium">Live</span>
+          <span className="text-xs text-dash-muted font-medium">{t.flightTable.live}</span>
         </div>
       </div>
 
@@ -143,14 +147,14 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-dash-border bg-slate-50/50">
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Flight</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Origin</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Destination</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Departure</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Arrival</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Telemetry</th>
-              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Status</th>
-              <th className="text-center py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">Calendar</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.flight}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.origin}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.destination}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.departure}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.arrival}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.telemetry}</th>
+              <th className="text-left py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.status}</th>
+              <th className="text-center py-3 px-5 font-semibold text-dash-muted text-xs uppercase tracking-wider">{t.flightTable.calendar}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-dash-border">
@@ -173,7 +177,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDot(flight.status)}`} />
                       <span className="font-semibold text-dash-text font-mono">{flight.flightNumber}</span>
                       {isActive && depDelay !== null && depDelay !== 0 && (
-                        <DelayBadge minutes={depDelay} />
+                        <DelayBadge minutes={depDelay} earlyLabel={t.flightTable.earlyLabel} lateLabel={t.flightTable.lateLabel} />
                       )}
                     </div>
                   </td>
@@ -241,7 +245,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-dash-muted hover:text-theme-600 hover:bg-theme-50 transition-colors"
-                      title="Add to Google Calendar"
+                      title={t.flightTable.addToCalendar}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -273,7 +277,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                   <div className={`w-2 h-2 rounded-full ${getStatusDot(flight.status)}`} />
                   <span className="font-bold text-dash-text font-mono">{flight.flightNumber}</span>
                   {isActive && depDelay !== null && depDelay !== 0 && (
-                    <DelayBadge minutes={depDelay} />
+                    <DelayBadge minutes={depDelay} earlyLabel={t.flightTable.earlyLabel} lateLabel={t.flightTable.lateLabel} />
                   )}
                 </div>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(flight.status)}`}>
@@ -299,7 +303,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
 
               <div className="flex items-center gap-3 text-sm">
                 <div className="flex-1">
-                  <div className="text-dash-muted text-xs">From</div>
+                  <div className="text-dash-muted text-xs">{t.flightTable.from}</div>
                   <div className="font-medium text-dash-text truncate">{flight.startLocation}</div>
                   <div className="text-xs text-dash-muted font-mono">{flight.startDate}</div>
                   <TimeCell
@@ -313,7 +317,7 @@ export default function FlightTable({ flights }: { flights: Flight[] }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
                 <div className="flex-1 text-right">
-                  <div className="text-dash-muted text-xs">To</div>
+                  <div className="text-dash-muted text-xs">{t.flightTable.to}</div>
                   <div className="font-medium text-dash-text truncate">{flight.endLocation}</div>
                   <div className="text-xs text-dash-muted font-mono">{flight.endDate}</div>
                   <div className="flex justify-end">

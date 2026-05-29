@@ -6,6 +6,7 @@ import DashboardShell from '@/components/DashboardShell';
 import StatsCards from '@/components/StatsCards';
 import FlightTable from '@/components/FlightTable';
 import type { Flight } from '@/components/FlightSearch';
+import { useLanguage } from '@/components/LanguageContext';
 
 const RECENT_SEARCHES_KEY = 'flight_tracker_recent_searches';
 const MAX_RECENT = 5;
@@ -48,6 +49,7 @@ function clearRecentSearches() {
 
 function DashboardContent() {
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [searchValue, setSearchValue] = useState('');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
@@ -156,11 +158,10 @@ function DashboardContent() {
             </svg>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-dash-text mb-3 text-center">
-            Flight Tracker Command Center
+            {t.dashboard.heroTitle}
           </h1>
           <p className="text-dash-muted text-center max-w-md mb-8">
-            Enter a flight number above to get real-time status updates,
-            departure and arrival information, and more.
+            {t.dashboard.heroSubtitle}
           </p>
 
           {/* Recent Searches or Example Flights */}
@@ -171,13 +172,13 @@ function DashboardContent() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-medium">Recent Searches</span>
+                  <span className="font-medium">{t.dashboard.recentSearches}</span>
                 </div>
                 <button
                   onClick={handleClearHistory}
                   className="text-xs text-dash-muted hover:text-red-500 transition-colors"
                 >
-                  Clear history
+                  {t.dashboard.clearHistory}
                 </button>
               </div>
               <div className="flex flex-col gap-2">
@@ -254,7 +255,7 @@ function DashboardContent() {
           </svg>
           <div>
             <h4 className="text-sm font-semibold text-red-800">
-              Error fetching flight data
+              {t.dashboard.errorTitle}
             </h4>
             <p className="text-sm text-red-600 mt-0.5">{error}</p>
           </div>
@@ -306,11 +307,10 @@ function DashboardContent() {
                 />
               </svg>
               <h3 className="text-lg font-semibold text-dash-text mb-1">
-                No flights found
+                {t.dashboard.noFlightsTitle}
               </h3>
               <p className="text-dash-muted text-sm">
-                No flights found matching &quot;{searchValue}&quot;. Try
-                AA123 or ACA228.
+                {t.dashboard.noFlightsText.replace('{query}', searchValue)}
               </p>
             </div>
           ) : (

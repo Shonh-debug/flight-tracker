@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Flight } from '@/components/FlightSearch';
 import Sidebar from '@/components/Sidebar';
+import { useLanguage } from '@/components/LanguageContext';
 
 // ─── Status utilities ───
 
@@ -68,6 +69,7 @@ function InfoRow({ label, value, accent, accentColor }: { label: string; value: 
 
 export default function FlightDetailPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [flight, setFlight] = useState<Flight | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -119,7 +121,7 @@ export default function FlightDetailPage() {
   if (!flight) {
     return (
       <div className="flex min-h-screen bg-dash-bg items-center justify-center">
-        <div className="text-dash-muted text-sm">Loading flight details…</div>
+        <div className="text-dash-muted text-sm">{t.flightDetail.loadingDetails}</div>
       </div>
     );
   }
@@ -152,7 +154,7 @@ export default function FlightDetailPage() {
             }
           }} className="flex items-center gap-2 text-sm text-dash-muted hover:text-theme-600 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Back to Results
+            {t.flightDetail.backToResults}
           </button>
 
           <div className="flex-1" />
@@ -179,7 +181,7 @@ export default function FlightDetailPage() {
                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
               />
             </svg>
-            {isSaved ? 'In Watchlist' : 'Add to Watchlist'}
+            {isSaved ? t.flightDetail.inWatchlist : t.flightDetail.addToWatchlist}
           </button>
 
           {/* Add to Google Calendar */}
@@ -190,7 +192,7 @@ export default function FlightDetailPage() {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-dash-muted hover:text-theme-600 hover:bg-theme-50 border border-dash-border transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            Add to Calendar
+            {t.flightDetail.addToCalendar}
           </a>
         </header>
 
@@ -212,13 +214,13 @@ export default function FlightDetailPage() {
                   {isDelayed && isActive && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      +{Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)} min delay
+                      {t.flightDetail.minDelayLabel.replace('{min}', String(Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)))}
                     </span>
                   )}
                   {isEarly && !isDelayed && isActive && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      {Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)} min early
+                      {t.flightDetail.minEarly.replace('{min}', String(Math.abs(flight.departureDelay ?? flight.arrivalDelay ?? 0)))}
                     </span>
                   )}
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${sc.bg} ${sc.text} border ${sc.border}`}>
@@ -259,28 +261,28 @@ export default function FlightDetailPage() {
             {/* Departure card */}
             <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
               <div className="px-5 py-3 bg-slate-50 border-b border-dash-border">
-                <h3 className="text-xs font-semibold text-dash-muted uppercase tracking-wider">Departure</h3>
+                <h3 className="text-xs font-semibold text-dash-muted uppercase tracking-wider">{t.flightDetail.departure}</h3>
               </div>
               <div className="p-5 space-y-0">
-                <InfoRow label="Airport" value={flight.startLocation} />
-                <InfoRow label="Airport Code" value={flight.startIata || undefined} />
-                <InfoRow label="Timezone" value={flight.startTimeZone !== 'N/A' ? flight.startTimeZone : undefined} />
-                <InfoRow label="Date" value={flight.startDate} />
-                <InfoRow label="Scheduled" value={flight.startTime} />
+                <InfoRow label={t.flightDetail.airport} value={flight.startLocation} />
+                <InfoRow label={t.flightDetail.airportCode} value={flight.startIata || undefined} />
+                <InfoRow label={t.flightDetail.timezone} value={flight.startTimeZone !== 'N/A' ? flight.startTimeZone : undefined} />
+                <InfoRow label={t.flightDetail.date} value={flight.startDate} />
+                <InfoRow label={t.flightDetail.scheduled} value={flight.startTime} />
                 {isActive && flight.startEstimatedTime && (
-                  <InfoRow label="Estimated" value={flight.startEstimatedTime} accent accentColor={(flight.departureDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
+                  <InfoRow label={t.flightDetail.estimated} value={flight.startEstimatedTime} accent accentColor={(flight.departureDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
                 )}
-                {flight.startTerminal && <InfoRow label="Terminal" value={flight.startTerminal} />}
-                {flight.startGate && <InfoRow label="Gate" value={flight.startGate} />}
+                {flight.startTerminal && <InfoRow label={t.flightDetail.terminal} value={flight.startTerminal} />}
+                {flight.startGate && <InfoRow label={t.flightDetail.gate} value={flight.startGate} />}
                 {isActive && flight.departureDelay !== null && flight.departureDelay !== 0 && (
                   <div className="flex justify-between items-center py-2.5 border-b border-dash-border last:border-b-0">
-                    <span className="text-sm text-dash-muted">{flight.departureDelay < 0 ? 'Early' : 'Delay'}</span>
+                    <span className="text-sm text-dash-muted">{flight.departureDelay < 0 ? t.flightDetail.early : t.flightDetail.delay}</span>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold border ${
                       flight.departureDelay < 0
                         ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
                         : 'bg-amber-100 text-amber-700 border-amber-300'
                     }`}>
-                      {flight.departureDelay < 0 ? `${Math.abs(flight.departureDelay)} min early` : `+${flight.departureDelay} min`}
+                      {flight.departureDelay < 0 ? t.flightDetail.minEarly.replace('{min}', String(Math.abs(flight.departureDelay))) : t.flightDetail.minDelay.replace('{min}', String(flight.departureDelay))}
                     </span>
                   </div>
                 )}
@@ -290,28 +292,28 @@ export default function FlightDetailPage() {
             {/* Arrival card */}
             <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
               <div className="px-5 py-3 bg-slate-50 border-b border-dash-border">
-                <h3 className="text-xs font-semibold text-dash-muted uppercase tracking-wider">Arrival</h3>
+                <h3 className="text-xs font-semibold text-dash-muted uppercase tracking-wider">{t.flightDetail.arrival}</h3>
               </div>
               <div className="p-5 space-y-0">
-                <InfoRow label="Airport" value={flight.endLocation} />
-                <InfoRow label="Airport Code" value={flight.endIata || undefined} />
-                <InfoRow label="Timezone" value={flight.endTimeZone !== 'N/A' ? flight.endTimeZone : undefined} />
-                <InfoRow label="Date" value={flight.endDate} />
-                <InfoRow label="Scheduled" value={flight.endTime} />
+                <InfoRow label={t.flightDetail.airport} value={flight.endLocation} />
+                <InfoRow label={t.flightDetail.airportCode} value={flight.endIata || undefined} />
+                <InfoRow label={t.flightDetail.timezone} value={flight.endTimeZone !== 'N/A' ? flight.endTimeZone : undefined} />
+                <InfoRow label={t.flightDetail.date} value={flight.endDate} />
+                <InfoRow label={t.flightDetail.scheduled} value={flight.endTime} />
                 {isActive && flight.endEstimatedTime && (
-                  <InfoRow label="Estimated" value={flight.endEstimatedTime} accent accentColor={(flight.arrivalDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
+                  <InfoRow label={t.flightDetail.estimated} value={flight.endEstimatedTime} accent accentColor={(flight.arrivalDelay ?? 0) < 0 ? 'emerald' : 'amber'} />
                 )}
-                {flight.endTerminal && <InfoRow label="Terminal" value={flight.endTerminal} />}
-                {flight.endGate && <InfoRow label="Gate" value={flight.endGate} />}
+                {flight.endTerminal && <InfoRow label={t.flightDetail.terminal} value={flight.endTerminal} />}
+                {flight.endGate && <InfoRow label={t.flightDetail.gate} value={flight.endGate} />}
                 {isActive && flight.arrivalDelay !== null && flight.arrivalDelay !== 0 && (
                   <div className="flex justify-between items-center py-2.5 border-b border-dash-border last:border-b-0">
-                    <span className="text-sm text-dash-muted">{flight.arrivalDelay < 0 ? 'Early' : 'Delay'}</span>
+                    <span className="text-sm text-dash-muted">{flight.arrivalDelay < 0 ? t.flightDetail.early : t.flightDetail.delay}</span>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold border ${
                       flight.arrivalDelay < 0
                         ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
                         : 'bg-amber-100 text-amber-700 border-amber-300'
                     }`}>
-                      {flight.arrivalDelay < 0 ? `${Math.abs(flight.arrivalDelay)} min early` : `+${flight.arrivalDelay} min`}
+                      {flight.arrivalDelay < 0 ? t.flightDetail.minEarly.replace('{min}', String(Math.abs(flight.arrivalDelay))) : t.flightDetail.minDelay.replace('{min}', String(flight.arrivalDelay))}
                     </span>
                   </div>
                 )}
@@ -327,12 +329,12 @@ export default function FlightDetailPage() {
               </svg>
               <div>
                 <h4 className={`text-sm font-semibold ${sc.text}`}>
-                  Flight {flight.status}
+                  {t.flightDetail.flightStatusPrefix} {flight.status}
                 </h4>
                 <p className={`text-sm ${sc.text} opacity-80 mt-0.5`}>
-                  {isCancelled && 'This flight has been cancelled by the airline. Please contact your carrier for alternatives.'}
-                  {flight.status === 'Diverted' && 'This flight has been diverted from its original destination.'}
-                  {flight.status === 'Incident' && 'An incident has been reported for this flight. Please check with the airline for details.'}
+                  {isCancelled && t.flightDetail.flightCancelled}
+                  {flight.status === 'Diverted' && t.flightDetail.flightDiverted}
+                  {flight.status === 'Incident' && t.flightDetail.flightIncident}
                 </p>
               </div>
             </div>
@@ -342,8 +344,8 @@ export default function FlightDetailPage() {
 
         {/* Footer */}
         <footer className="border-t border-dash-border px-6 py-3 flex items-center justify-between text-xs text-dash-muted">
-          <span>FlightTracker © {new Date().getFullYear()}</span>
-          <span>Powered by Aviation Stack API</span>
+          <span>{t.footer.copyright} © {new Date().getFullYear()}</span>
+          <span>{t.footer.poweredBy}</span>
         </footer>
       </div>
     </div>

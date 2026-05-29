@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
+import { useLanguage } from '@/components/LanguageContext';
 
 export default function DashboardShell({
   children,
@@ -18,6 +19,7 @@ export default function DashboardShell({
   loading: boolean;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const { t } = useLanguage();
 
   return (
     <div className="flex min-h-screen bg-dash-bg">
@@ -44,8 +46,8 @@ export default function DashboardShell({
         </main>
 
         <footer className="border-t border-dash-border px-6 py-3 flex items-center justify-between text-xs text-dash-muted">
-          <span>FlightTracker © {new Date().getFullYear()}</span>
-          <span>Powered by Aviation Stack API</span>
+          <span>{t.footer.copyright} © {new Date().getFullYear()}</span>
+          <span>{t.footer.poweredBy}</span>
         </footer>
       </div>
     </div>

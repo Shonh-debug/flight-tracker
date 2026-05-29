@@ -5,8 +5,10 @@ import DashboardShell from '@/components/DashboardShell';
 import StatsCards from '@/components/StatsCards';
 import FlightTable from '@/components/FlightTable';
 import type { Flight } from '@/components/FlightSearch';
+import { useLanguage } from '@/components/LanguageContext';
 
 export default function FlightsPage() {
+  const { t } = useLanguage();
   const [searchValue, setSearchValue] = useState('');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,9 +51,9 @@ export default function FlightsPage() {
       loading={loading}
     >
       <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-dash-text mb-1">Flights</h1>
+        <h1 className="text-2xl font-bold text-dash-text mb-1">{t.flightsPage.title}</h1>
         <p className="text-dash-muted text-sm mb-6">
-          Search and track any flight in real time. Enter a flight number in the search bar above.
+          {t.flightsPage.subtitle}
         </p>
       </div>
 
@@ -62,7 +64,7 @@ export default function FlightsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h4 className="text-sm font-semibold text-red-800">Error fetching flight data</h4>
+            <h4 className="text-sm font-semibold text-red-800">{t.flightsPage.errorTitle}</h4>
             <p className="text-sm text-red-600 mt-0.5">{error}</p>
           </div>
         </div>
@@ -89,8 +91,8 @@ export default function FlightsPage() {
           <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <h3 className="text-lg font-semibold text-dash-text mb-1">Search for a flight</h3>
-          <p className="text-dash-muted text-sm">Use the search bar above to look up any flight by its IATA or ICAO code.</p>
+          <h3 className="text-lg font-semibold text-dash-text mb-1">{t.flightsPage.searchTitle}</h3>
+          <p className="text-dash-muted text-sm">{t.flightsPage.searchSubtitle}</p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             {['AA123', 'ACA228', 'UA456'].map((example) => (
               <button
@@ -111,9 +113,9 @@ export default function FlightsPage() {
           <StatsCards flights={flights} />
           {flights.length === 0 ? (
             <div className="bg-white rounded-xl border border-dash-border p-8 text-center animate-fade-in">
-              <h3 className="text-lg font-semibold text-dash-text mb-1">No flights found</h3>
+              <h3 className="text-lg font-semibold text-dash-text mb-1">{t.flightsPage.noFlightsTitle}</h3>
               <p className="text-dash-muted text-sm">
-                No flights found matching &quot;{searchValue}&quot;. Try AA123 or ACA228.
+                {t.flightsPage.noFlightsText.replace('{query}', searchValue)}
               </p>
             </div>
           ) : (
