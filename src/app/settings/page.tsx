@@ -94,21 +94,15 @@ export default function SettingsPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              disabled={tab.disabled}
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-theme-50 text-theme-600'
-                  : tab.disabled
-                  ? 'opacity-50 cursor-not-allowed text-dash-muted'
                   : 'text-dash-muted hover:bg-slate-50 hover:text-dash-text'
               }`}
             >
               {tab.icon}
               {tab.label}
-              {tab.disabled && (
-                <span className="ml-auto text-[10px] uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Coming Soon</span>
-              )}
             </button>
           ))}
         </div>
