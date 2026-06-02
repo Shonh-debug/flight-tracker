@@ -92,7 +92,55 @@ function formatDate(dateString: string | null, _timeZone: string | null) {
 // Force the route to be dynamic so it never caches outdated real-time data
 export const dynamic = 'force-dynamic';
 
+// ─── In-memory sliding window rate limiter ───
+const RATE_LIMIT = 20;          // max requests per window
+const RATE_WINDOW_MS = 60_000;  // 60 seconds
+
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+// Periodically clean up stale entries to avoid memory leaks (every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetTime) rateLimitMap.delete(key);
+  }
+}, 5 * 60_000);
+
+function getRateLimitInfo(ip: string): { limited: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW_MS });
+    return { limited: false, remaining: RATE_LIMIT - 1, resetTime: now + RATE_WINDOW_MS };
+  }
+
+  entry.count++;
+  const remaining = Math.max(0, RATE_LIMIT - entry.count);
+  return { limited: entry.count > RATE_LIMIT, remaining, resetTime: entry.resetTime };
+}
+
 export async function GET(request: Request) {
+  // ── Rate limiting ──
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() || 'unknown';
+  const { limited, remaining, resetTime } = getRateLimitInfo(ip);
+
+  if (limited) {
+    const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again shortly.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit': String(RATE_LIMIT),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const flightNumber = searchParams.get('flightNumber');
 
@@ -100,22 +148,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ flights: [] });
   }
 
+  // ── Input validation ──
+  const cleanNumber = flightNumber.replace(/\s+/g, '');
+  if (!/^[A-Za-z0-9]{2,10}$/.test(cleanNumber)) {
+    return NextResponse.json(
+      { error: 'Invalid flight number format. Use 2-10 alphanumeric characters (e.g. AA123).' },
+      { status: 400 }
+    );
+  }
+
   const apiKey = process.env.AVIATION_STACK_API_KEY;
   if (!apiKey) {
     console.error("Missing AVIATION_STACK_API_KEY");
     return NextResponse.json(
-      { error: "API key is missing. Please set AVIATION_STACK_API_KEY in .env.local (or your Vercel Environment Variables dashboard)" },
-      { status: 500 }
+      { error: "Flight data is temporarily unavailable. Please try again later." },
+      { status: 503 }
     );
   }
 
   try {
     // Determine if the input is an ICAO code (3 letters followed by numbers) or IATA code.
-    const cleanNumber = flightNumber.replace(/\s+/g, '');
     const isIcao = /^[A-Za-z]{3}\d+$/.test(cleanNumber);
     const queryParam = isIcao ? 'flight_icao' : 'flight_iata';
 
-    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${cleanNumber}&limit=100`;
+    const url = `http://api.aviationstack.com/v1/flights?access_key=${apiKey}&${queryParam}=${encodeURIComponent(cleanNumber)}&limit=100`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: { 'Accept': 'application/json' }
