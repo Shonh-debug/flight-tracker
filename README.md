@@ -8,15 +8,18 @@ A real-time flight tracking web application that lets you look up any commercial
 
 ## 📋 Overview
 
-Flight Tracker is a full-stack web application that integrates the **Aviation Stack API** to retrieve and display real-time global flight data. Users can search for any flight by its IATA or ICAO code, view a live summary dashboard, and click into a full flight detail page showing departure/arrival information, time zone-accurate schedules, delay badges, and color-coded status indicators.
+Flight Tracker is a full-stack web application that integrates the **Aviation Stack API** to retrieve and display real-time global flight data. Modeled with a premium, futuristic dark-glass layout, the app features a responsive command center where users can search for flights, track live statuses, view an interactive 3D globe visualization, and see timezone-accurate departure/arrival metrics.
 
 ### Key Features
 
 - 🔍 **Flight Search** — Enter any IATA (e.g. `AA123`) or ICAO (e.g. `ACA228`) flight number
 - 📊 **Live Dashboard** — Summary stats cards (Total / Active / Landed / Delayed / Cancelled / Scheduled)
+- 🌍 **3D Interactive Globe** — Beautiful WebGL globe (powered by `cobe`) highlighting active tracker views
+- 🎨 **Liquid Glass & Glowing UI** — Stunning modern glassmorphic look with dark glass cards, grid background overlays, and smooth glows
+- 🌗 **Dark & Light Mode** — Fully customized dark theme (default) and clean light theme toggles
 - 🕐 **Timezone-Accurate Times** — Scheduled times displayed in the local timezone of each airport
 - ⚠️ **Delay Badges** — Real-time delay in minutes shown alongside scheduled times, with strikethrough and estimated time
-- 🎨 **Color-Coded Statuses** — Active (blue), Scheduled (slate), Landed (green), Cancelled (red), Diverted (purple), Incident (orange)
+- 🏷️ **Color-Coded Status Badges** — Glossy, status-specific badges indicating Active (neon cyan), Scheduled (slate), Landed (green), Cancelled (red), Diverted (purple), and Incident (orange)
 - 📄 **Flight Detail Page** — Full boarding-pass-style breakdown per flight with airport codes, terminal, gate, and delay info
 - 📅 **Google Calendar Integration** — Add any flight to Google Calendar via the calendar icon
 - 📱 **Responsive Design** — Fully responsive across desktop and mobile
@@ -32,6 +35,7 @@ Flight Tracker is a full-stack web application that integrates the **Aviation St
 | **Next.js 16 (App Router)** | React framework — routing, server components, and API routes |
 | **TypeScript** | Type-safe development across all components and API handlers |
 | **Tailwind CSS** | Utility-first CSS framework for styling and responsive design |
+| **Cobe** | Lightweight, high-performance WebGL 3D globe visualization |
 | **Inter** (Google Font) | Primary UI typeface |
 | **JetBrains Mono** (Google Font) | Monospace font for flight numbers, times, and codes |
 
@@ -65,17 +69,23 @@ src/
 │   ├── flights/
 │   │   └── [id]/
 │   │       └── page.tsx        # Flight detail page (dynamic route)
-│   ├── layout.tsx              # Root layout with fonts and metadata
-│   ├── page.tsx                # Dashboard homepage
-│   └── globals.css             # Global styles and custom badge classes
+│   ├── settings/
+│   │   └── page.tsx            # Settings page (language and dark/light mode toggle)
+│   ├── watchlist/
+│   │   └── page.tsx            # Watchlisted flights page
+│   ├── layout.tsx              # Root layout with fonts, theme loader script, and context
+│   ├── page.tsx                # Dashboard homepage with 3D globe hero
+│   └── globals.css             # CSS variables, glassmorphic styles, and custom badges
 ├── components/
-│   ├── DashboardShell.tsx      # Layout wrapper (sidebar + topbar + main)
-│   ├── FlightSearch.tsx        # Shared Flight type + legacy search component
-│   ├── FlightTable.tsx         # Results table with delay badges and row navigation
-│   ├── Sidebar.tsx             # Collapsible sidebar navigation
-│   ├── StatsCards.tsx          # Summary stat cards (total, active, delayed, etc.)
-│   └── TopBar.tsx              # Top search bar and header
-├── locales/                    # Support for 6 different languages 
+│   ├── DashboardShell.tsx      # Layout wrapper with sidebar, topbar, and background topographic overlay
+│   ├── FlightSearch.tsx        # Autocomplete search component with dropdown
+│   ├── FlightTable.tsx         # Restyled results table with delay indicators
+│   ├── Globe.tsx               # WebGL canvas 3D Earth globe using cobe
+│   ├── LanguageContext.tsx     # Context for global i18n support
+│   ├── Sidebar.tsx             # Collapsible glass sidebar navigation
+│   ├── StatsCards.tsx          # Stat dashboard cards with modern glass container styles
+│   └── TopBar.tsx              # Glass header containing search, language, and route info
+├── locales/                    # Support for 6 different languages (en, de, fr, ru, vi, zh)
 │   ├── en.ts                  
 │   ├── de.ts        
 │   ├── fr.ts         
