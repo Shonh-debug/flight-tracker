@@ -8,31 +8,33 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        sidebar: {
-          DEFAULT: '#1e293b',
-          hover: '#334155',
-          active: '#0ea5e9',
+        // Glass-themed dark/light mode palette
+        glass: {
+          bg: 'var(--bg-primary)',
+          surface: 'var(--bg-secondary)',
+          card: 'var(--bg-glass)',
+          border: 'var(--border-glass)',
+          glow: 'var(--border-glow)',
         },
-        dash: {
-          bg: '#f1f5f9',
-          card: '#ffffff',
-          border: '#e2e8f0',
-          text: '#0f172a',
-          muted: '#64748b',
-          success: '#22c55e',
-          warning: '#f59e0b',
-          danger: '#ef4444',
-          info: '#3b82f6',
+        accent: {
+          DEFAULT: 'var(--accent)',
+          dim: 'var(--accent-dim)',
+          muted: 'var(--accent-muted)',
         },
-        theme: {
-          50: 'rgb(var(--theme-50) / <alpha-value>)',
-          100: 'rgb(var(--theme-100) / <alpha-value>)',
-          200: 'rgb(var(--theme-200) / <alpha-value>)',
-          300: 'rgb(var(--theme-300) / <alpha-value>)',
-          400: 'rgb(var(--theme-400) / <alpha-value>)',
-          500: 'rgb(var(--theme-500) / <alpha-value>)',
-          600: 'rgb(var(--theme-600) / <alpha-value>)',
-          700: 'rgb(var(--theme-700) / <alpha-value>)',
+        ft: {
+          text: 'var(--text-primary)',
+          muted: 'var(--text-secondary)',
+          accent: 'var(--accent)',
+        },
+        // Status colors (same in both modes)
+        status: {
+          active: '#3b82f6',
+          scheduled: '#64748b',
+          landed: '#22c55e',
+          delayed: '#f59e0b',
+          cancelled: '#ef4444',
+          diverted: '#a855f7',
+          incident: '#f97316',
         },
       },
       fontFamily: {
@@ -40,11 +42,15 @@ module.exports = {
         mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'fade-in': 'fadeIn 0.4s ease-out',
+        'slide-up': 'slideUp 0.4s ease-out',
         'slide-in-left': 'slideInLeft 0.3s ease-out',
         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
         'spin-slow': 'spin 3s linear infinite',
+        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'border-glow': 'borderGlow 2s ease-in-out infinite',
+        'scan-line': 'scanLine 4s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -63,6 +69,32 @@ module.exports = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.4' },
         },
+        glowPulse: {
+          '0%, 100%': { boxShadow: '0 0 15px var(--accent-muted), inset 0 0 15px var(--accent-muted)' },
+          '50%': { boxShadow: '0 0 30px var(--accent-muted), inset 0 0 30px var(--accent-muted)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        borderGlow: {
+          '0%, 100%': { borderColor: 'var(--border-glass)' },
+          '50%': { borderColor: 'var(--border-glow)' },
+        },
+        scanLine: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow-sm': '0 0 10px var(--accent-muted)',
+        'glow': '0 0 20px var(--accent-muted)',
+        'glow-lg': '0 0 40px var(--accent-muted)',
+        'glow-accent': '0 0 20px var(--accent)',
+        'inner-glow': 'inset 0 0 20px var(--accent-muted)',
       },
     },
   },

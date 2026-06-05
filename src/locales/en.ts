@@ -18,7 +18,7 @@ const en = {
 
   // TopBar
   topbar: {
-    title: 'Live Flight Tracker',
+    title: 'Flight Tracker Dashboard',
     searchPlaceholder: 'Flight ID ',
     track: 'Track',
     searching: 'Searching',
@@ -32,7 +32,7 @@ const en = {
 
   // Dashboard
   dashboard: {
-    heroTitle: 'Flight Tracker Command Center',
+    heroTitle: 'Dashboard',
     heroSubtitle: 'Enter a flight number above to get real-time status updates, departure and arrival information, and more.',
     recentSearches: 'Recent Searches',
     clearHistory: 'Clear history',
@@ -148,11 +148,12 @@ const en = {
 
     // Appearance tab
     appearance: 'Appearance',
-    themeTitle: 'Theme Accents',
-    themeSubtitle: 'Personalize the look and feel of your command center.',
-    skyBlue: 'Sky Blue',
-    atcEmerald: 'ATC Emerald',
-    radarAmber: 'Radar Amber',
+    themeTitle: 'Display Mode',
+    themeSubtitle: 'Switch between dark and light interface themes.',
+    darkMode: 'Dark Mode',
+    lightMode: 'Light Mode',
+    darkModeDesc: 'Futuristic dark theme with neon accents',
+    lightModeDesc: 'Clean light theme with teal accents',
 
     // Language tab
     language: 'Language',
@@ -168,4 +169,3 @@ type DeepStringify<T> = {
 
 export type TranslationKeys = DeepStringify<typeof en>;
 export default en as TranslationKeys;
-

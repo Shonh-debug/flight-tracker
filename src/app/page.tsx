@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import DashboardShell from '@/components/DashboardShell';
 import StatsCards from '@/components/StatsCards';
 import FlightTable from '@/components/FlightTable';
 import type { Flight } from '@/components/FlightSearch';
 import { useLanguage } from '@/components/LanguageContext';
+
+const Globe = dynamic(() => import('@/components/Globe'), { ssr: false });
 
 const RECENT_SEARCHES_KEY = 'flight_tracker_recent_searches';
 const MAX_RECENT = 5;
@@ -141,97 +144,94 @@ function DashboardContent() {
     >
       {/* Welcome / Hero when no search has been done */}
       {!searched && (
-        <div className="flex flex-col items-center justify-center py-16 md:py-24 animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-theme-100 flex items-center justify-center mb-6">
-            <svg
-              className="w-10 h-10 text-theme-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-dash-text mb-3 text-center">
-            {t.dashboard.heroTitle}
-          </h1>
-          <p className="text-dash-muted text-center max-w-md mb-8">
-            {t.dashboard.heroSubtitle}
-          </p>
+        <div className="animate-fade-in">
+          {/* Hero section with globe */}
+          <div className="flex flex-col lg:flex-row items-center gap-8 py-8 md:py-12">
+            {/* Left side: Title + search prompt */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-3">
+                <span className="text-glow text-[var(--accent)]">Flight Tracker</span>{' '}
+                {t.dashboard.heroTitle.replace('Flight Tracker Command Center', 'Dashboard')}
+              </h1>
+              <p className="text-[var(--text-secondary)] max-w-md mb-8">
+                {t.dashboard.heroSubtitle}
+              </p>
 
-          {/* Recent Searches or Example Flights */}
-          {hasRecent ? (
-            <div className="w-full max-w-lg">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2 text-sm text-dash-muted">
+              {/* Example flight buttons (shown when no recent searches) */}
+              {!hasRecent && (
+                <div className="flex flex-wrap gap-3">
+                  {['AA123', 'ACA228', 'UA456'].map((example) => (
+                    <button
+                      key={example}
+                      onClick={() => {
+                        setSearchValue(example);
+                      }}
+                      className="px-4 py-2 glass-card text-sm font-mono text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--border-glow)] transition-all"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right side: Globe */}
+            <div className="flex-shrink-0 w-64 md:w-80 lg:w-96">
+              <Globe />
+            </div>
+          </div>
+
+          {/* Recent Searches */}
+          {hasRecent && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-medium">{t.dashboard.recentSearches}</span>
+                  <span className="font-semibold text-[var(--text-primary)]">{t.dashboard.recentSearches}</span>
                 </div>
                 <button
                   onClick={handleClearHistory}
-                  className="text-xs text-dash-muted hover:text-red-500 transition-colors"
+                  className="text-xs text-[var(--text-secondary)] hover:text-red-400 transition-colors"
                 >
                   {t.dashboard.clearHistory}
                 </button>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {recentSearches.map((recent, i) => (
                   <button
                     key={`${recent.flightNumber}-${recent.timestamp}`}
                     onClick={() => doSearch(recent.query)}
-                    className="group flex items-center gap-3 px-4 py-3 bg-white border border-dash-border rounded-xl hover:border-theme-300 hover:bg-theme-50/50 hover:shadow-sm transition-all animate-slide-up"
+                    className="group glass-card px-4 py-3 text-left animate-slide-up"
                     style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-theme-50 flex items-center justify-center flex-shrink-0 group-hover:bg-theme-100 transition-colors">
-                      <svg className="w-4 h-4 text-theme-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-dash-text font-mono">
+                    {/* Flight number + airline */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-bold text-sm text-[var(--text-primary)] font-mono">
                           {recent.flightNumber}
                         </span>
-                        <span className="text-xs text-dash-muted">·</span>
-                        <span className="text-xs text-dash-muted font-medium truncate">
+                        <span className="text-[var(--border-glass)]">·</span>
+                        <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate">
                           {recent.airline}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-dash-muted mt-0.5">
-                        <span className="font-semibold text-dash-text">{recent.startIata}</span>
-                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                        <span className="font-semibold text-dash-text">{recent.endIata}</span>
-                      </div>
+                      <svg className="w-3.5 h-3.5 text-[var(--text-secondary)] group-hover:text-[var(--accent)] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
+                      </svg>
                     </div>
-                    <svg className="w-4 h-4 text-slate-300 group-hover:text-theme-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    {/* Route */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-bold text-[var(--text-primary)] font-mono">{recent.startIata}</span>
+                      <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                      <span className="font-bold text-[var(--text-primary)] font-mono">{recent.endIata}</span>
+                    </div>
                   </button>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap justify-center gap-3">
-              {['AA123', 'ACA228', 'UA456'].map((example) => (
-                <button
-                  key={example}
-                  onClick={() => {
-                    setSearchValue(example);
-                  }}
-                  className="px-4 py-2 bg-white border border-dash-border rounded-lg text-sm font-mono text-dash-muted hover:text-theme-600 hover:border-theme-300 hover:bg-theme-50 transition-all"
-                >
-                  {example}
-                </button>
-              ))}
             </div>
           )}
         </div>
@@ -239,9 +239,9 @@ function DashboardContent() {
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 animate-fade-in">
+        <div className="glass-card p-4 flex items-start gap-3 animate-fade-in border-red-500/30" style={{ borderColor: 'rgba(239, 68, 68, 0.3)' }}>
           <svg
-            className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+            className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -254,10 +254,10 @@ function DashboardContent() {
             />
           </svg>
           <div>
-            <h4 className="text-sm font-semibold text-red-800">
+            <h4 className="text-sm font-semibold text-red-400">
               {t.dashboard.errorTitle}
             </h4>
-            <p className="text-sm text-red-600 mt-0.5">{error}</p>
+            <p className="text-sm text-red-400/80 mt-0.5">{error}</p>
           </div>
         </div>
       )}
@@ -269,7 +269,7 @@ function DashboardContent() {
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-xl border border-dash-border p-5"
+                className="glass-card p-5"
               >
                 <div className="skeleton h-10 w-10 rounded-lg mb-3" />
                 <div className="skeleton h-8 w-16 mb-2" />
@@ -277,7 +277,7 @@ function DashboardContent() {
               </div>
             ))}
           </div>
-          <div className="bg-white rounded-xl border border-dash-border p-5">
+          <div className="glass-card p-5">
             <div className="skeleton h-5 w-32 mb-4" />
             {[...Array(3)].map((_, i) => (
               <div key={i} className="skeleton h-12 w-full mb-3 last:mb-0" />
@@ -292,9 +292,9 @@ function DashboardContent() {
           <StatsCards flights={flights} />
 
           {flights.length === 0 ? (
-            <div className="bg-white rounded-xl border border-dash-border p-8 text-center animate-fade-in">
+            <div className="glass-card p-8 text-center animate-fade-in">
               <svg
-                className="w-12 h-12 text-slate-300 mx-auto mb-4"
+                className="w-12 h-12 text-[var(--text-secondary)] mx-auto mb-4 opacity-50"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -306,10 +306,10 @@ function DashboardContent() {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              <h3 className="text-lg font-semibold text-dash-text mb-1">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
                 {t.dashboard.noFlightsTitle}
               </h3>
-              <p className="text-dash-muted text-sm">
+              <p className="text-[var(--text-secondary)] text-sm">
                 {t.dashboard.noFlightsText.replace('{query}', searchValue)}
               </p>
             </div>
@@ -325,8 +325,8 @@ function DashboardContent() {
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen bg-dash-bg items-center justify-center">
-        <div className="text-dash-muted text-sm">Loading…</div>
+      <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="text-[var(--text-secondary)] text-sm">Loading…</div>
       </div>
     }>
       <DashboardContent />

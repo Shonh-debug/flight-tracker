@@ -75,7 +75,7 @@ export default function Sidebar({
       {/* Mobile overlay */}
       {!isCollapsed && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={onToggle}
           aria-hidden="true"
         />
@@ -83,24 +83,27 @@ export default function Sidebar({
 
       <aside
         className={`
-          fixed top-0 left-0 h-screen bg-sidebar z-50
+          fixed top-0 left-0 h-screen z-50
           flex flex-col
           transition-all duration-300 ease-in-out
+          glass
+          border-r border-[var(--border-glass)]
           ${isCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'translate-x-0 w-64'}
         `}
+        style={{ borderRadius: '0 16px 16px 0' }}
         role="complementary"
       >
         {/* Logo / Brand */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10">
-          <div className="w-9 h-9 rounded-lg bg-theme-500 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-[var(--border-glass)]">
+          <div className="w-9 h-9 rounded-lg bg-[var(--accent)] flex items-center justify-center flex-shrink-0 shadow-glow-sm">
+            <svg className="w-5 h-5 text-[#0f172a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
             </svg>
           </div>
           {!isCollapsed && (
             <div className="animate-fade-in">
-              <div className="text-white font-bold text-lg leading-tight">{t.sidebar.brand}</div>
-              <div className="text-slate-400 text-xs">{t.sidebar.subtitle}</div>
+              <div className="text-[var(--text-primary)] font-bold text-lg leading-tight">{t.sidebar.brand}</div>
+              <div className="text-[var(--text-secondary)] text-xs">{t.sidebar.subtitle}</div>
             </div>
           )}
         </div>
@@ -126,17 +129,17 @@ export default function Sidebar({
                   }
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
                   text-sm font-medium transition-all duration-200
                   ${isActive
-                    ? 'bg-theme-500/20 text-theme-400'
-                    : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
+                    ? 'nav-active'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-glass-hover)] hover:text-[var(--text-primary)]'
                   }
                   ${isCollapsed ? 'justify-center lg:justify-center' : ''}
                 `}
                 title={isCollapsed ? t.sidebar[item.labelKey] : undefined}
               >
-                <span className={isActive ? 'text-theme-400' : ''}>{item.icon}</span>
+                <span className={isActive ? 'text-[var(--accent)]' : ''}>{item.icon}</span>
                 {!isCollapsed && <span className="animate-fade-in">{t.sidebar[item.labelKey]}</span>}
               </Link>
             );
@@ -149,7 +152,7 @@ export default function Sidebar({
             onClick={onToggle}
             aria-expanded={!isCollapsed}
             aria-label={isCollapsed ? t.sidebar.expandSidebar : t.sidebar.collapseSidebar}
-            className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-sidebar-hover transition-colors text-sm"
+            className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--bg-glass-hover)] transition-colors text-sm"
           >
             <svg
               className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}

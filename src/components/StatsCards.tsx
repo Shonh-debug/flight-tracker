@@ -8,8 +8,7 @@ type StatConfig = {
   value: number;
   icon: React.ReactNode;
   color: string;
-  bgColor: string;
-  borderColor: string;
+  glowColor: string;
 };
 
 function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir: string; landed: string; delayed: string; cancelledDiverted: string }): StatConfig[] {
@@ -30,9 +29,8 @@ function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir
     {
       label: labels.totalFlights,
       value: total,
-      color: 'text-theme-600',
-      bgColor: 'bg-theme-50',
-      borderColor: 'border-theme-200',
+      color: 'text-[var(--accent)]',
+      glowColor: 'var(--accent-muted)',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3 3-3.2-.8c-.4-.1-.8.2-1 .6L1 17l4 1.5L6.5 23l1.2-.8c.4-.3.7-.7.6-1.1L7.5 18l3-3 5 6 1.2-.7c.4-.2.7-.6.6-1.1z" />
@@ -42,9 +40,8 @@ function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir
     {
       label: labels.activeInAir,
       value: active,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      color: 'text-blue-400',
+      glowColor: 'rgba(59, 130, 246, 0.15)',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -54,9 +51,8 @@ function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir
     {
       label: labels.landed,
       value: landed,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
+      color: 'text-emerald-400',
+      glowColor: 'rgba(34, 197, 94, 0.15)',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
@@ -66,9 +62,8 @@ function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir
     {
       label: labels.delayed,
       value: delayed,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      borderColor: delayed > 0 ? 'border-amber-400' : 'border-amber-200',
+      color: 'text-amber-400',
+      glowColor: 'rgba(245, 158, 11, 0.15)',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -78,9 +73,8 @@ function getStats(flights: Flight[], labels: { totalFlights: string; activeInAir
     {
       label: labels.cancelledDiverted,
       value: cancelled,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      borderColor: cancelled > 0 ? 'border-red-400' : 'border-red-200',
+      color: 'text-red-400',
+      glowColor: 'rgba(239, 68, 68, 0.15)',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -99,18 +93,21 @@ export default function StatsCards({ flights }: { flights: Flight[] }) {
       {stats.map((stat, i) => (
         <div
           key={stat.label}
-          className={`bg-white rounded-xl border ${stat.borderColor} p-4 md:p-5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-slide-up`}
+          className="glass-card p-4 md:p-5 transition-all duration-300 hover:-translate-y-0.5 animate-slide-up"
           style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'both' }}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className={`p-2 rounded-lg ${stat.bgColor} ${stat.color}`}>
+            <div
+              className={`p-2 rounded-lg ${stat.color}`}
+              style={{ background: stat.glowColor }}
+            >
               {stat.icon}
             </div>
           </div>
           <div className={`text-3xl font-bold ${stat.color} mb-1 font-mono`}>
             {stat.value}
           </div>
-          <div className="text-sm text-dash-muted font-medium">
+          <div className="text-sm text-[var(--text-secondary)] font-medium">
             {stat.label}
           </div>
         </div>

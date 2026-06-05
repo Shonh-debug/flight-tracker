@@ -22,14 +22,14 @@ export default function DashboardShell({
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-screen bg-dash-bg">
+    <div className="flex min-h-screen topo-bg" style={{ background: 'var(--bg-primary)' }}>
       <Sidebar
         isCollapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
       <div
-        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
+        className={`flex-1 flex flex-col min-h-screen transition-all duration-300 relative z-10 ${
           sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
         }`}
       >
@@ -45,7 +45,7 @@ export default function DashboardShell({
           {children}
         </main>
 
-        <footer className="border-t border-dash-border px-6 py-3 flex items-center justify-between text-xs text-dash-muted">
+        <footer className="border-t border-[var(--border-glass)] px-6 py-3 flex items-center justify-between text-xs text-[var(--text-secondary)]">
           <span>{t.footer.copyright} © {new Date().getFullYear()}</span>
           <span>{t.footer.poweredBy}</span>
         </footer>

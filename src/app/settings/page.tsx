@@ -10,14 +10,14 @@ const SETTINGS_KEY = 'flight_tracker_settings';
 type SettingsState = {
   distanceUnit: 'km' | 'miles';
   altitudeUnit: 'meters' | 'feet';
-  themeAccent: 'sky' | 'emerald' | 'amber';
+  darkMode: boolean;
   language: Locale;
 };
 
 const defaultSettings: SettingsState = {
   distanceUnit: 'miles',
   altitudeUnit: 'feet',
-  themeAccent: 'sky',
+  darkMode: true,
   language: 'en',
 };
 
@@ -34,7 +34,13 @@ export default function SettingsPage() {
     const stored = localStorage.getItem(SETTINGS_KEY);
     if (stored) {
       try {
-        setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+        const parsed = JSON.parse(stored);
+        // Migration: if old themeAccent exists, convert to darkMode
+        if ('themeAccent' in parsed && !('darkMode' in parsed)) {
+          parsed.darkMode = true; // default to dark
+          delete parsed.themeAccent;
+        }
+        setSettings({ ...defaultSettings, ...parsed });
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
@@ -53,11 +59,11 @@ export default function SettingsPage() {
     setSettings(newSettings);
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
     
-    if (key === 'themeAccent') {
-      if (value === 'sky') {
+    if (key === 'darkMode') {
+      if (value === true) {
         document.documentElement.removeAttribute('data-theme');
       } else {
-        document.documentElement.setAttribute('data-theme', value as string);
+        document.documentElement.setAttribute('data-theme', 'light');
       }
     }
 
@@ -96,14 +102,14 @@ export default function SettingsPage() {
       loading={false}
     >
       <div className="animate-fade-in relative">
-        <h1 className="text-2xl font-bold text-dash-text mb-1">{t.settings.title}</h1>
-        <p className="text-dash-muted text-sm mb-6">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{t.settings.title}</h1>
+        <p className="text-[var(--text-secondary)] text-sm mb-6">
           {t.settings.subtitle}
         </p>
 
         {/* Toast Notification */}
         {toastMessage && (
-          <div className="absolute top-0 right-0 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in">
+          <div className="absolute top-0 right-0 bg-[var(--accent)] text-[#0f172a] px-4 py-2 rounded-lg shadow-glow text-sm font-medium animate-fade-in">
             {toastMessage}
           </div>
         )}
@@ -111,15 +117,15 @@ export default function SettingsPage() {
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Vertical Tab Navigation */}
-        <div className="w-full md:w-64 space-y-1 bg-white p-2 rounded-xl border border-dash-border flex-shrink-0 animate-slide-up">
+        <div className="w-full md:w-64 space-y-1 glass-card p-2 flex-shrink-0 animate-slide-up">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-theme-50 text-theme-600'
-                  : 'text-dash-muted hover:bg-slate-50 hover:text-dash-text'
+                  ? 'nav-active'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-glass-hover)] hover:text-[var(--text-primary)]'
               }`}
             >
               {tab.icon}
@@ -131,32 +137,32 @@ export default function SettingsPage() {
         {/* Tab Content */}
         <div className="flex-1 w-full space-y-6">
           {activeTab === 'general' && isClient && (
-            <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-              <div className="px-6 py-5 border-b border-dash-border bg-slate-50/50">
-                <h3 className="text-base font-semibold text-dash-text">{t.settings.generalTitle}</h3>
-                <p className="text-sm text-dash-muted mt-1">{t.settings.generalSubtitle}</p>
+            <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+              <div className="px-6 py-5 border-b border-[var(--border-glass)] bg-[var(--accent-muted)]">
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">{t.settings.generalTitle}</h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">{t.settings.generalSubtitle}</p>
               </div>
-              <div className="divide-y divide-dash-border">
+              <div className="divide-y divide-[var(--border-glass)]">
                 {/* Distance Unit */}
                 <div className="px-6 py-5 flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-dash-text">{t.settings.distanceUnit}</div>
-                    <div className="text-sm text-dash-muted mt-0.5">{t.settings.distanceDesc}</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{t.settings.distanceUnit}</div>
+                    <div className="text-sm text-[var(--text-secondary)] mt-0.5">{t.settings.distanceDesc}</div>
                   </div>
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button onClick={() => updateSetting('distanceUnit', 'km')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'km' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>{t.settings.kilometers}</button>
-                    <button onClick={() => updateSetting('distanceUnit', 'miles')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'miles' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>{t.settings.miles}</button>
+                  <div className="flex p-1 rounded-lg" style={{ background: 'var(--accent-muted)' }}>
+                    <button onClick={() => updateSetting('distanceUnit', 'km')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'km' ? 'bg-[var(--accent)] text-[#0f172a] shadow-glow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>{t.settings.kilometers}</button>
+                    <button onClick={() => updateSetting('distanceUnit', 'miles')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.distanceUnit === 'miles' ? 'bg-[var(--accent)] text-[#0f172a] shadow-glow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>{t.settings.miles}</button>
                   </div>
                 </div>
                 {/* Altitude Unit */}
                 <div className="px-6 py-5 flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-dash-text">{t.settings.altitudeUnit}</div>
-                    <div className="text-sm text-dash-muted mt-0.5">{t.settings.altitudeDesc}</div>
+                    <div className="text-sm font-medium text-[var(--text-primary)]">{t.settings.altitudeUnit}</div>
+                    <div className="text-sm text-[var(--text-secondary)] mt-0.5">{t.settings.altitudeDesc}</div>
                   </div>
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
-                    <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>{t.settings.meters}</button>
-                    <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-white text-theme-600 shadow-sm' : 'text-dash-muted hover:text-dash-text'}`}>{t.settings.feet}</button>
+                  <div className="flex p-1 rounded-lg" style={{ background: 'var(--accent-muted)' }}>
+                    <button onClick={() => updateSetting('altitudeUnit', 'meters')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'meters' ? 'bg-[var(--accent)] text-[#0f172a] shadow-glow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>{t.settings.meters}</button>
+                    <button onClick={() => updateSetting('altitudeUnit', 'feet')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${settings.altitudeUnit === 'feet' ? 'bg-[var(--accent)] text-[#0f172a] shadow-glow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>{t.settings.feet}</button>
                   </div>
                 </div>
               </div>
@@ -164,37 +170,92 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'appearance' && isClient && (
-            <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-              <div className="px-6 py-5 border-b border-dash-border bg-slate-50/50">
-                <h3 className="text-base font-semibold text-dash-text">{t.settings.themeTitle}</h3>
-                <p className="text-sm text-dash-muted mt-1">{t.settings.themeSubtitle}</p>
+            <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+              <div className="px-6 py-5 border-b border-[var(--border-glass)] bg-[var(--accent-muted)]">
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">{t.settings.themeTitle}</h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">{t.settings.themeSubtitle}</p>
               </div>
               <div className="px-6 py-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {[
-                    { id: 'sky', name: t.settings.skyBlue, color: 'bg-sky-500' },
-                    { id: 'emerald', name: t.settings.atcEmerald, color: 'bg-emerald-500' },
-                    { id: 'amber', name: t.settings.radarAmber, color: 'bg-amber-500' },
-                  ].map((theme) => (
-                    <button
-                      key={theme.id}
-                      onClick={() => updateSetting('themeAccent', theme.id as any)}
-                      className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${settings.themeAccent === theme.id ? 'border-theme-500 bg-slate-50' : 'border-transparent bg-slate-50 hover:bg-slate-100'}`}
-                    >
-                      <div className={`w-12 h-12 rounded-full ${theme.color} mb-3 shadow-sm ring-4 ring-white`} />
-                      <span className="text-sm font-medium text-dash-text">{theme.name}</span>
-                    </button>
-                  ))}
+                {/* Dark/Light Mode Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* Sun/Moon icons */}
+                    <div className="flex items-center gap-3">
+                      <div className={`p-3 rounded-xl transition-all ${settings.darkMode ? 'bg-[var(--accent-muted)] text-[var(--accent)] shadow-glow-sm' : 'text-[var(--text-secondary)]'}`}>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-[var(--text-primary)]">{settings.darkMode ? t.settings.darkMode : t.settings.lightMode}</div>
+                        <div className="text-xs text-[var(--text-secondary)] mt-0.5">{settings.darkMode ? t.settings.darkModeDesc : t.settings.lightModeDesc}</div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Toggle switch */}
+                  <button
+                    onClick={() => updateSetting('darkMode', !settings.darkMode)}
+                    className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                      settings.darkMode
+                        ? 'bg-[var(--accent)] shadow-glow-sm'
+                        : 'bg-slate-300'
+                    }`}
+                    role="switch"
+                    aria-checked={settings.darkMode}
+                    aria-label="Toggle dark mode"
+                  >
+                    <div
+                      className={`absolute top-0.5 w-6 h-6 rounded-full transition-all duration-300 ${
+                        settings.darkMode
+                          ? 'left-7 bg-[#0f172a]'
+                          : 'left-0.5 bg-white'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Preview cards */}
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => updateSetting('darkMode', true)}
+                    className={`p-4 rounded-xl border-2 transition-all text-center ${
+                      settings.darkMode
+                        ? 'border-[var(--accent)] shadow-glow-sm'
+                        : 'border-[var(--border-glass)] hover:border-[var(--border-glow)]'
+                    }`}
+                  >
+                    <div className="w-full h-16 rounded-lg bg-[#0a0e1a] border border-cyan-900/30 mb-3 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">{t.settings.darkMode}</span>
+                  </button>
+                  <button
+                    onClick={() => updateSetting('darkMode', false)}
+                    className={`p-4 rounded-xl border-2 transition-all text-center ${
+                      !settings.darkMode
+                        ? 'border-[var(--accent)] shadow-glow-sm'
+                        : 'border-[var(--border-glass)] hover:border-[var(--border-glow)]'
+                    }`}
+                  >
+                    <div className="w-full h-16 rounded-lg bg-[#f0f4f8] border border-slate-200 mb-3 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">{t.settings.lightMode}</span>
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'language' && isClient && (
-            <div className="bg-white rounded-xl border border-dash-border overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-              <div className="px-6 py-5 border-b border-dash-border bg-slate-50/50">
-                <h3 className="text-base font-semibold text-dash-text">{t.settings.languageTitle}</h3>
-                <p className="text-sm text-dash-muted mt-1">{t.settings.languageSubtitle}</p>
+            <div className="glass-card overflow-hidden animate-slide-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+              <div className="px-6 py-5 border-b border-[var(--border-glass)] bg-[var(--accent-muted)]">
+                <h3 className="text-base font-semibold text-[var(--text-primary)]">{t.settings.languageTitle}</h3>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">{t.settings.languageSubtitle}</p>
               </div>
               <div className="px-6 py-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -204,17 +265,17 @@ export default function SettingsPage() {
                       onClick={() => updateSetting('language', lang.code)}
                       className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
                         settings.language === lang.code
-                          ? 'border-theme-500 bg-theme-50/50 shadow-sm'
-                          : 'border-transparent bg-slate-50 hover:bg-slate-100 hover:border-slate-200'
+                          ? 'border-[var(--accent)] bg-[var(--accent-muted)] shadow-glow-sm'
+                          : 'border-[var(--border-glass)] hover:bg-[var(--bg-glass-hover)] hover:border-[var(--border-glow)]'
                       }`}
                     >
                       <span className="text-3xl flex-shrink-0">{lang.flag}</span>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-dash-text">{lang.nativeName}</div>
-                        <div className="text-xs text-dash-muted">{lang.englishName}</div>
+                        <div className="text-sm font-semibold text-[var(--text-primary)]">{lang.nativeName}</div>
+                        <div className="text-xs text-[var(--text-secondary)]">{lang.englishName}</div>
                       </div>
                       {settings.language === lang.code && (
-                        <svg className="w-5 h-5 text-theme-500 ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[var(--accent)] ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       )}

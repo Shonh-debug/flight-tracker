@@ -36,8 +36,8 @@ export default function RootLayout({
                 const stored = localStorage.getItem('flight_tracker_settings');
                 if (stored) {
                   const settings = JSON.parse(stored);
-                  if (settings.themeAccent && settings.themeAccent !== 'sky') {
-                    document.documentElement.setAttribute('data-theme', settings.themeAccent);
+                  if (settings.darkMode === false) {
+                    document.documentElement.setAttribute('data-theme', 'light');
                   }
                 }
               } catch (e) {}
