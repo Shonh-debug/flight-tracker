@@ -37,80 +37,96 @@ const AIRPORT_MARKERS = [
   { location: [59.9139, 10.7522] as [number, number], size: 0.03 },     // OSL
 ];
 
-// ──── 3D projection math ────────────────────────────────────
+// ──── Cobe-exact projection math ────────────────────────────
+// Derived directly from cobe's source: the `U` and `O` functions
 type Vec3 = [number, number, number];
-const DEG2RAD = Math.PI / 180;
-const RAD2DEG = 180 / Math.PI;
-const GLOBE_THETA = 0.15;       // Must match createGlobe theta
-const ARC_HEIGHT = 0.3;         // Must match createGlobe arcHeight
-const GLOBE_RADIUS_FACTOR = 0.465; // Empirical: maps normalized 3D to container pixels
+const { PI, sin, cos, atan2, sqrt } = Math;
+const DEG2RAD = PI / 180;
+const RAD2DEG = 180 / PI;
 
-/** Convert lat/lon (degrees) to a unit 3D vector */
+// Globe config constants — must match createGlobe options
+const GLOBE_THETA = 0.15;
+const ARC_HEIGHT = 0.3;
+const MARKER_ELEVATION = 0.02;
+const GLOBE_SCALE = 1.05;
+const GLOBE_SURFACE = 0.8; // cobe's internal surface constant (ee=0.8)
+
+/**
+ * Convert [lat, lon] in degrees to cobe's internal 3D vector.
+ * Matches cobe's `U` function exactly.
+ */
 function latLonTo3D(lat: number, lon: number): Vec3 {
   const φ = lat * DEG2RAD;
-  const λ = lon * DEG2RAD;
-  return [Math.cos(φ) * Math.sin(λ), Math.sin(φ), Math.cos(φ) * Math.cos(λ)];
+  const λ = lon * DEG2RAD - PI;
+  const c = cos(φ);
+  return [-c * cos(λ), sin(φ), c * sin(λ)];
 }
 
-/** Spherical linear interpolation between two unit vectors */
-function slerp(a: Vec3, b: Vec3, t: number): Vec3 {
-  const dot = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
-  const ω = Math.acos(dot);
-  if (ω < 1e-6) return [...a] as Vec3;
-  const sω = Math.sin(ω);
-  const wa = Math.sin((1 - t) * ω) / sω;
-  const wb = Math.sin(t * ω) / sω;
-  return [wa * a[0] + wb * b[0], wa * a[1] + wb * b[1], wa * a[2] + wb * b[2]];
+/**
+ * Project a 3D point to normalized screen coordinates [0..1, 0..1].
+ * Matches cobe's `O` function exactly.
+ * Returns { nx, ny, visible } where nx/ny are 0..1 fractions of the canvas.
+ */
+function cobeProject(
+  pt: Vec3,
+  phi: number,
+  theta: number,
+  canvasW: number,
+  canvasH: number,
+  scale: number,
+  offsetX: number,
+  offsetY: number,
+  dpr: number,
+): { nx: number; ny: number; visible: boolean } {
+  const ct = cos(theta), st = sin(theta);
+  const cp = cos(phi), sp = sin(phi);
+
+  // cobe's rotation matrix applied inline
+  const cx = cp * pt[0] + sp * pt[2];
+  const sy = sp * st * pt[0] + ct * pt[1] - cp * st * pt[2];
+
+  const aspect = canvasW / canvasH;
+  const nx = (cx / aspect * scale + offsetX * scale * dpr / canvasW + 1) / 2;
+  const ny = (-sy * scale + offsetY * scale * dpr / canvasH + 1) / 2;
+
+  // Visibility: z-component of the rotated point >= 0 OR point is on the globe's rim
+  const vz = -sp * ct * pt[0] + st * pt[1] + cp * ct * pt[2];
+  const visible = vz >= 0 || cx * cx + sy * sy >= 0.64;
+
+  return { nx, ny, visible };
 }
 
-/** Normalize a 3D vector to unit length */
-function normalize(v: Vec3): Vec3 {
-  const l = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
-  return l < 1e-10 ? v : [v[0] / l, v[1] / l, v[2] / l];
-}
+/**
+ * Compute the arc midpoint in 3D, elevated above the surface.
+ * Matches cobe's `X` function exactly.
+ */
+function arcMidpoint3D(from: Vec3, to: Vec3): Vec3 | null {
+  const ax = from[0] + to[0];
+  const ay = from[1] + to[1];
+  const az = from[2] + to[2];
+  const len = sqrt(ax * ax + ay * ay + az * az);
+  if (len < 0.001) return null;
 
-/** Apply globe rotation (phi + theta) and project orthographically to screen space */
-function projectPoint(x: number, y: number, z: number, phi: number) {
-  // Y-axis rotation (horizontal globe spin)
-  const cp = Math.cos(phi), sp = Math.sin(phi);
-  const x1 = x * cp - z * sp;
-  const z1 = x * sp + z * cp;
-  // X-axis rotation (vertical tilt)
-  const ct = Math.cos(GLOBE_THETA), st = Math.sin(GLOBE_THETA);
-  const y1 = y * ct - z1 * st;
-  const z2 = y * st + z1 * ct;
-  // sx/sy are normalized screen coords; visible when z2 > 0 (facing camera)
-  return { sx: x1, sy: -y1, visible: z2 > 0.05 };
+  // cobe's exact elevation formula: 0.25*(ee+p) + 0.5*(ee+R+p)/len
+  const elev = 0.25 * (GLOBE_SURFACE + MARKER_ELEVATION) +
+               0.5 * (GLOBE_SURFACE + ARC_HEIGHT + MARKER_ELEVATION) / len;
+
+  return [ax * elev, ay * elev, az * elev];
 }
 
 // ──── Precomputed arc geometry ──────────────────────────────
 interface ArcGeom {
-  mid: Vec3;  // Elevated midpoint of arc (where airplane sits)
-  t1: Vec3;   // Tangent sample point before midpoint (for direction)
-  t2: Vec3;   // Tangent sample point after midpoint (for direction)
+  mid: Vec3;       // Elevated midpoint (where airplane sits)
+  from3d: Vec3;    // 3D position of departure (for direction)
+  to3d: Vec3;      // 3D position of arrival (for direction)
 }
 
 function buildArcGeometry(): ArcGeom[] {
   return FLIGHT_ROUTES.map((route) => {
-    const a = latLonTo3D(route.from[0], route.from[1]);
-    const b = latLonTo3D(route.to[0], route.to[1]);
-
-    // Angular distance between endpoints (radians)
-    const dot = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
-    const angDist = Math.acos(dot);
-
-    // Great-circle midpoint, normalized
-    const midRaw = slerp(a, b, 0.5);
-    const midN = normalize(midRaw);
-
-    // Elevation scales with arc angular distance (longer routes = higher arcs)
-    const elevation = 1 + ARC_HEIGHT * angDist * 0.5;
-
-    return {
-      mid: [midN[0] * elevation, midN[1] * elevation, midN[2] * elevation] as Vec3,
-      t1: slerp(a, b, 0.45),  // slightly before midpoint
-      t2: slerp(a, b, 0.55),  // slightly after midpoint
-    };
+    const from3d = latLonTo3D(route.from[0], route.from[1]);
+    const to3d = latLonTo3D(route.to[0], route.to[1]);
+    const mid = arcMidpoint3D(from3d, to3d);
+    return { mid: mid || from3d, from3d, to3d };
   });
 }
 
@@ -136,6 +152,10 @@ const LIGHT_THEME = {
 };
 
 // ──── Component ─────────────────────────────────────────────
+const CANVAS_W = 600 * 2;
+const CANVAS_H = 600 * 2;
+const DPR = 2;
+
 export default function Globe() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -171,17 +191,17 @@ export default function Globe() {
     resizeObs.observe(container);
 
     const globe = createGlobe(canvas, {
-      devicePixelRatio: 2,
-      width: 600 * 2,
-      height: 600 * 2,
+      devicePixelRatio: DPR,
+      width: CANVAS_W / DPR,
+      height: CANVAS_H / DPR,
       phi: phiRef.current,
       theta: GLOBE_THETA,
       mapSamples: 16000,
-      scale: 1.05,
+      scale: GLOBE_SCALE,
       offset: [0, 0],
       ...theme,
       markers: AIRPORT_MARKERS,
-      markerElevation: 0.02,
+      markerElevation: MARKER_ELEVATION,
       arcs: FLIGHT_ROUTES,
       arcWidth: 0.4,
       arcHeight: ARC_HEIGHT,
@@ -191,33 +211,54 @@ export default function Globe() {
       phiRef.current += 0.003;
       globe.update({ phi: phiRef.current });
 
-      // ── Project airplane positions onto screen ──
-      const size = sizeRef.current;
-      if (size > 0) {
-        const radius = size * GLOBE_RADIUS_FACTOR;
-        const cx = size / 2;
-        const cy = size / 2;
-
+      // ── Project airplane positions using cobe's exact math ──
+      const containerSize = sizeRef.current;
+      if (containerSize > 0) {
         for (let i = 0; i < arcGeom.length; i++) {
           const el = planeRefs.current[i];
           if (!el) continue;
 
-          const { mid, t1, t2 } = arcGeom[i];
-          const pm = projectPoint(mid[0], mid[1], mid[2], phiRef.current);
+          const { mid, from3d, to3d } = arcGeom[i];
 
-          // Flight direction from two tangent samples
-          const p1 = projectPoint(t1[0], t1[1], t1[2], phiRef.current);
-          const p2 = projectPoint(t2[0], t2[1], t2[2], phiRef.current);
-          const dx = p2.sx - p1.sx;
-          const dy = p2.sy - p1.sy;
-          // +90° because the SVG airplane points UP, but atan2 measures from the RIGHT
-          const angle = Math.atan2(dy, dx) * RAD2DEG + 90;
+          // Project arc midpoint to screen (cobe-exact)
+          const pm = cobeProject(
+            mid, phiRef.current, GLOBE_THETA,
+            CANVAS_W, CANVAS_H, GLOBE_SCALE, 0, 0, DPR
+          );
 
-          const px = cx + pm.sx * radius;
-          const py = cy + pm.sy * radius;
+          // Convert normalized [0..1] coords to container pixels
+          const px = pm.nx * containerSize;
+          const py = pm.ny * containerSize;
+
+          // Compute flight direction from projected from/to endpoints
+          // Use the same surface-level elevation for direction calc
+          const surfaceElev = GLOBE_SURFACE + MARKER_ELEVATION;
+          const fromSurf: Vec3 = [from3d[0] * surfaceElev, from3d[1] * surfaceElev, from3d[2] * surfaceElev];
+          const toSurf: Vec3 = [to3d[0] * surfaceElev, to3d[1] * surfaceElev, to3d[2] * surfaceElev];
+
+          const pFrom = cobeProject(
+            fromSurf, phiRef.current, GLOBE_THETA,
+            CANVAS_W, CANVAS_H, GLOBE_SCALE, 0, 0, DPR
+          );
+          const pTo = cobeProject(
+            toSurf, phiRef.current, GLOBE_THETA,
+            CANVAS_W, CANVAS_H, GLOBE_SCALE, 0, 0, DPR
+          );
+
+          const dx = pTo.nx - pFrom.nx;
+          const dy = pTo.ny - pFrom.ny;
+          // +90° because SVG airplane points UP, atan2 measures from RIGHT
+          const angle = atan2(dy, dx) * RAD2DEG + 90;
+
+          // Only show if the midpoint z-depth is truly facing the camera
+          // (stricter check: exclude rim-visible points)
+          const ct = cos(GLOBE_THETA), st = sin(GLOBE_THETA);
+          const cp = cos(phiRef.current), sp = sin(phiRef.current);
+          const vz = -sp * ct * mid[0] + st * mid[1] + cp * ct * mid[2];
+          const trulyVisible = vz > 0;
 
           el.style.transform = `translate(${px}px, ${py}px) translate(-50%, -50%) rotate(${angle}deg)`;
-          el.style.opacity = pm.visible ? '1' : '0';
+          el.style.opacity = trulyVisible ? '1' : '0';
         }
       }
 
