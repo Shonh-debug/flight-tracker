@@ -155,7 +155,7 @@ Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`
 
 ## Example Workflow
 
-**User request:** "Làm landing page cho dịch vụ chăm sóc da chuyên nghiệp"
+**User request:** "Create a landing page for a professional Beauty/Spa service."
 
 ### Step 1: Analyze Requirements
 - Product type: Beauty/Spa service
