@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: UI/UX design intelligence. 50 styles, 21 palettes, 50 font pairings, 20 charts, 9 stacks.
+description: Use this skill automatically whenever the user requests UI/UX work, UI design, component building, interface reviews, styling fixes, color palettes, or layout improvements.
 ---
 # ui-ux-pro-max
 
